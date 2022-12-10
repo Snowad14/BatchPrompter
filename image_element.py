@@ -34,7 +34,7 @@ class ImageElement(QtWidgets.QWidget):
         self.caption = QtWidgets.QLabel(self)
         self.caption.setWordWrap(True)
         self.caption.setText("")
-        self.caption.setText(self.readCaption()) # Import
+        #self.caption.setText(self.readCaption()) # Import
         self.layout.addWidget(self.caption)
 
         mainFrame.flowLayout.addWidget(self)
