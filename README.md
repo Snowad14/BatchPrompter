@@ -1,6 +1,6 @@
 <h1 align="center">BatchPrompter</h1>
 
-`Toon2Data is a program that extracts panels in manwha/Webtoon with text and bubble inpainting.`
+`BatchPrompter is a tool to make easy captioning of images under a good pyqt GUI.`
 
 ![Screenshots](https://i.imgur.com/SkuKd11.jpg)
 
