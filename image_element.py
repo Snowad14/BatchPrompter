@@ -108,26 +108,34 @@ class ImageElement(QtWidgets.QWidget):
         print(f"RESULT : {name}")
         return name
 
+    def removeAllElements(self):
+        self.usedPrompt.remove(prompt_element.PromptElement.currentSelected)
+
+        # Remove all the current descriptions in the current selected Prompt
+        for desc in prompt_element.PromptElement.currentSelected.descriptions:
+            if desc in self.usedPrompt:
+                self.usedPrompt.remove(desc)
+
+    def addSelectedElements(self):
+        self.usedPrompt.append(prompt_element.PromptElement.currentSelected)
+        for desc in description_element.DescriptionElement.selectedDescriptions:
+            self.usedPrompt.append(desc)
+
     def mousePressEvent(self, QMouseEvent):
         if prompt_element.PromptElement.currentSelected: # make sur user has selected a prombt
 
-            if self.isSelected: # deselected image on click
-                self.deselect()
-                self.usedPrompt.remove(prompt_element.PromptElement.currentSelected)
-
-                # Remove all the current descriptions in the current selected Prompt
-                for desc in prompt_element.PromptElement.currentSelected.descriptions:
-                    if desc in self.usedPrompt:
-                        self.usedPrompt.remove(desc)
-
-                self.updateCaption()
-
-            else: # select & paint image
-                self.usedPrompt.append(prompt_element.PromptElement.currentSelected)
-                for desc in prompt_element.PromptElement.currentSelected.descriptions:
-                    if desc in description_element.DescriptionElement.selectedDescriptions:
-                        self.usedPrompt.append(desc)
+            # 2 Cases : Left Click -> deselect/select Image / Others Clicks -> add missing prompts
+            if self.isSelected:
+                if QMouseEvent.button() == 1:
+                    self.deselect()
+                    self.removeAllElements()
+                else:
+                    self.removeAllElements()
+                    self.addSelectedElements()
+            else:
                 self.select()
-                self.updateCaption()
+                self.addSelectedElements()
+
+            self.updateCaption()
         else:
             utils.sendErrorMessage("You must selected a Prompt")
