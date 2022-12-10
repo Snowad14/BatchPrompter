@@ -108,7 +108,7 @@ class ImageElement(QtWidgets.QWidget):
         print(f"RESULT : {name}")
         return name
 
-    def removeAllElements(self):
+    def _removeAllElements(self):
         self.usedPrompt.remove(prompt_element.PromptElement.currentSelected)
 
         # Remove all the current descriptions in the current selected Prompt
@@ -116,25 +116,30 @@ class ImageElement(QtWidgets.QWidget):
             if desc in self.usedPrompt:
                 self.usedPrompt.remove(desc)
 
-    def addSelectedElements(self):
+    def _addSelectedElements(self):
         self.usedPrompt.append(prompt_element.PromptElement.currentSelected)
         for desc in description_element.DescriptionElement.selectedDescriptions:
             self.usedPrompt.append(desc)
 
+    def _hasAllSelectedPrompt(self):
+        for desc in description_element.DescriptionElement.selectedDescriptions:
+            if desc not in self.usedPrompt:
+                return False
+        return True
+
     def mousePressEvent(self, QMouseEvent):
         if prompt_element.PromptElement.currentSelected: # make sur user has selected a prombt
-
-            # 2 Cases : Left Click -> deselect/select Image / Others Clicks -> add missing prompts
-            if self.isSelected:
-                if QMouseEvent.button() == 1:
-                    self.deselect()
-                    self.removeAllElements()
-                else:
-                    self.removeAllElements()
-                    self.addSelectedElements()
+            print(self._hasAllSelectedPrompt())
+            # Check if prompt has change and update or deselect image depending on whether the image already had all the prompts
+            if self.isSelected and not self._hasAllSelectedPrompt():
+                self._removeAllElements()
+                self._addSelectedElements()
+            elif self.isSelected:
+                self.deselect()
+                self._removeAllElements()
             else:
                 self.select()
-                self.addSelectedElements()
+                self._addSelectedElements()
 
             self.updateCaption()
         else:
