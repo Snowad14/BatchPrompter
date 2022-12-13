@@ -93,17 +93,11 @@ class PromptElement(QtWidgets.QWidget):
     def delete_element(self):
         if utils.sendConfirmMessage("Are you sure to delete this prompt ?"):
             self.parentFrame.close()
-
             for img in image_element.ImageElement.allImages:
-                if self in img.usedPrompt:
-                    img.deselect()
-                    img.usedPrompt.remove(self)
-                    for desc in self.descriptions:
-                        if desc in img.usedPrompt:
-                            img.usedPrompt.remove(desc)
-                    name = img._list2Caption()
-                    img.caption.setText(name)
-                    img.saveImageToCaption()
+                if self in img.usedDict.keys():
+                    del img.usedDict[self]
+                    img.updateCaption()
+                    if self == PromptElement.currentSelected: img.deselect()
 
             if self == PromptElement.currentSelected:
                 PromptElement.currentSelected = None
@@ -132,7 +126,9 @@ class PromptElement(QtWidgets.QWidget):
 
             # select images containing the new prompt
             for img in image_element.ImageElement.allImages:
-                if self in img.usedPrompt:
+                # if self in img.usedPrompt:
+                #     img.select()
+                if self in img.usedDict.keys():
                     img.select()
 
             self.select()

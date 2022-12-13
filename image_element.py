@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-import itertools, glob, os, uuid, imagesize
+import itertools, glob, os, uuid, imagesize, copy
 
 # Local Imports
 import utils, prompt_element, description_element
@@ -17,7 +17,7 @@ class ImageElement(QtWidgets.QWidget):
         self.allImages.append(self)
         self.id = next(ImageElement.idGenerator)
         self.isSelected = False
-        self.usedPrompt = []
+        self.usedDict = {}
         self.setEnabled(True)
         self.setMinimumSize(QtCore.QSize(200, 200))
         width, height = imagesize.get(self.path)
@@ -44,7 +44,7 @@ class ImageElement(QtWidgets.QWidget):
         return [img for img in ImageElement.allImages if img.isSelected]
 
     def updateCaption(self):
-        name = self._list2Caption()
+        name = self._dict2Caption()
         self.caption.setText(name)
         self.saveImageToCaption()
 
@@ -83,55 +83,33 @@ class ImageElement(QtWidgets.QWidget):
         self.isSelected = False
         self.setStyleSheet("")
 
-    def _list2Caption(self):
-        name = ""
-        new = [i.entry.text() for i in self.usedPrompt]
-        print(f"INPUT : {new}")
-        for c, element in enumerate(self.usedPrompt):
-            if c != 0:
-                if type(self.usedPrompt[c]) == prompt_element.PromptElement:
-                    if len(self.usedPrompt) != 1:
-                        name += self.mainFrame.subjectSeparatorContent.text()
-                else:
-                    if len(self.usedPrompt) != 1:
-                        name += self.mainFrame.descriptionSeparatorContent.text()
-            elif c != len(self.usedPrompt) - 1:
-                pass
-            else:
-                if type(self.usedPrompt[c]) == prompt_element.PromptElement:
-                    if len(self.usedPrompt) != 1:
-                        name += "; "
-                else:
-                    if len(self.usedPrompt) != 1:
-                        name += ", "
-            name += element.entry.text()
-        print(f"RESULT : {name}")
+    def _dict2Caption(self):
+        subjectList = []
+        for i in self.usedDict.items():
+            a = [element.entry.text() for element in [i[0]] + i[1]]
+            subjectList.append(", ".join(a))
+        name = "; ".join(subjectList)
         return name
 
     def _removeAllElements(self):
-        self.usedPrompt.remove(prompt_element.PromptElement.currentSelected)
-
-        # Remove all the current descriptions in the current selected Prompt
-        for desc in prompt_element.PromptElement.currentSelected.descriptions:
-            if desc in self.usedPrompt:
-                self.usedPrompt.remove(desc)
+        self.usedDict[prompt_element.PromptElement.currentSelected] = description_element.DescriptionElement.selectedDescriptions
+        del self.usedDict[prompt_element.PromptElement.currentSelected]
 
     def _addSelectedElements(self):
-        self.usedPrompt.append(prompt_element.PromptElement.currentSelected)
-        for desc in description_element.DescriptionElement.selectedDescriptions:
-            self.usedPrompt.append(desc)
+        self.usedDict[prompt_element.PromptElement.currentSelected] = [*description_element.DescriptionElement.selectedDescriptions]
 
     def _hasAllSelectedPrompt(self):
         for desc in description_element.DescriptionElement.selectedDescriptions:
-            if desc not in self.usedPrompt:
+            if desc not in self.usedDict.values():
                 return False
         return True
 
+
     def mousePressEvent(self, QMouseEvent):
+
         if prompt_element.PromptElement.currentSelected: # make sur user has selected a prombt
-            print(self._hasAllSelectedPrompt())
             # Check if prompt has change and update or deselect image depending on whether the image already had all the prompts
-            if self.isSelected and not self._hasAllSelectedPrompt():
+            if self.isSelected and self.usedDict.get(prompt_element.PromptElement.currentSelected) != description_element.DescriptionElement.selectedDescriptions:
                 self._removeAllElements()
                 self._addSelectedElements()
             elif self.isSelected:
@@ -142,5 +120,7 @@ class ImageElement(QtWidgets.QWidget):
                 self._addSelectedElements()
 
             self.updateCaption()
+            print(self.usedDict)
         else:
             utils.sendErrorMessage("You must selected a Prompt")
+

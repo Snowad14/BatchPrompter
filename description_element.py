@@ -54,10 +54,11 @@ class DescriptionElement(QtWidgets.QWidget):
         self.close()
         self.promptParent.descriptions.remove(self)
         for img in image_element.ImageElement.allImages:
-            if self in img.usedPrompt:
+            if img.usedDict.get(self.promptParent) and self in img.usedDict[self.promptParent]:
+                img.usedDict[self.promptParent].remove(self)
                 img.deselect()
-                img.usedPrompt.remove(self)
                 img.updateCaption()
+        self.deselect()
 
     def select(self):
         self.entry.setStyleSheet("QWidget { background-color: rgb(68, 140, 203) }")
