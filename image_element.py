@@ -64,11 +64,10 @@ class ImageElement(QtWidgets.QWidget):
         subjectList = []
         for i in self.usedDict.items():
             a = [element.entry.text() for element in [i[0]] + i[1]] # Get all subject & desc in one list
-            subjectList.append(", ".join(a))
-        name = "; ".join(subjectList)
+            subjectList.append(self.mainFrame.descriptionSeparatorContent.text().join(a))
+        name = self.mainFrame.subjectSeparatorContent.text().join(subjectList)
         return name
 
-    # Obliged to redo the "dict2Caption" function because it is called only when saving
     def _getRandomPromptOrder(self):
         subjectList = []
         for key, value in self.usedDict.items():
@@ -78,9 +77,9 @@ class ImageElement(QtWidgets.QWidget):
                 continue
             random.shuffle(value)
             value.insert(0, key)
-            subjectList.append(", ".join(value))
+            subjectList.append(self.mainFrame.descriptionSeparatorContent.text().join(value))
         random.shuffle(subjectList)
-        return "; ".join(subjectList)
+        return self.mainFrame.subjectSeparatorContent.text().join(subjectList)
 
     def saveImageToCaption(self):
         captionString = self._getRandomPromptOrder() if self.mainFrame.RandomizePromptOrderCheckbox.isChecked() else self.caption.text()
