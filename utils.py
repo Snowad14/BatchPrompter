@@ -25,3 +25,4 @@ class clickableQLineEdit(QtWidgets.QLineEdit):
 
     def mousePressEvent(self, QMouseEvent):
         self.clicked.emit()
+

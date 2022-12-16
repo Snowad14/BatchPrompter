@@ -2,11 +2,13 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from natsort import os_sorted
 import os, sys, glob
 
+import description_element
+import utils
 from flowlayout import FlowLayout
 import prompt_element, image_element
 
 #os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "0.8.4"
+VERSION = "0.9.0"
 
 class CustomContainer(QtWidgets.QScrollArea):
 
@@ -77,6 +79,10 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.TxtCaptionCheckbox = QtWidgets.QCheckBox(self.ContextMenu)
         self.TxtCaptionCheckbox.setChecked(True)
         self.verticalLayout_2.addWidget(self.TxtCaptionCheckbox)
+
+        self.RandomizePromptOrderCheckbox = QtWidgets.QCheckBox(self.ContextMenu)
+        self.RandomizePromptOrderCheckbox.setChecked(True)
+        self.verticalLayout_2.addWidget(self.RandomizePromptOrderCheckbox)
 
         self.SeparateByInfoLabel = QtWidgets.QLabel(self.ContextMenu)
         self.verticalLayout_2.addWidget(self.SeparateByInfoLabel)
@@ -155,13 +161,13 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.ImageContainer.setEnabled(True)
         self.ImageContainer.setAcceptDrops(False)
         self.ImageContainer.setWidgetResizable(True)
-        self.ImageContainer.setObjectName("ImageContainer")
         self.ImageContainer.setStyleSheet("QWidget { background-color: rgb(112, 112, 112) }")
         self.RightContainerLayout.addWidget(self.ImageContainer)
 
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
         self.scrollAreaWidgetContents.setEnabled(True)
         self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 773, 691))
+
         self.flowLayout = FlowLayout(self.scrollAreaWidgetContents)
 
         self.ImageContainer.setWidget(self.scrollAreaWidgetContents)
@@ -204,7 +210,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
             image.setParent(None)
             image.deleteLater()
         image_element.ImageElement.allImages.clear()
-        #image_element.ImageElement.ImageSelected.clear()
 
         for root, dirs, files in os.walk(folder_path):
             for name in os_sorted(files):
@@ -213,44 +218,50 @@ class Ui_MainWindow(QtWidgets.QWidget):
                     QtWidgets.QApplication.processEvents()
             if not self.SubfolderCheckbox.isChecked(): break
         #
-        # # Import all
+
+
+        # Import all captions [NEED REFACTOR]
         caption = [importedImages.caption.text() for importedImages in image_element.ImageElement.allImages]
 
-        # dico = {}
-        # for cap in caption:
-        #     #instanceList = cap.split(";")
-        #     instanceList = cap.split(self.subjectSeparatorContent.text().strip())
-        #     for instance in instanceList:
-        #         elements = instance.split(self.descriptionSeparatorContent.text().strip())
-        #         subjectName = elements[0].strip()
-        #         if subjectName:
-        #             if not dico.get(subjectName): dico[subjectName] = []
-        #             descriptions = [desc.strip() for desc in elements[1:] if desc.strip() not in dico[subjectName]]
-        #             dico[subjectName] = dico[subjectName] + descriptions
-        #
-        # for subject in dico.keys():
-        #     subjectPrompt = newElement.NameElement(mainFrame=self)
-        #     subjectPrompt.entry.setText(subject)
-        #     subjectPrompt.entry.setReadOnly(True)
-        #     subjectPrompt.addButton.setEnabled(True)
-        #
-        #     for img in newElement.ImageElement.allImages:
-        #         infos = [info.strip() for info in img.caption.text().replace(';', ',').split(',')]
-        #         if subject in infos and subject not in img.alreadyUsed:
-        #             img.alreadyUsed.append(subjectPrompt)
-        #
-        #     for desc in dico[subject]:
-        #         descPrompt = newElement.DescriptionElement(subjectPrompt, mainFrame=self)
-        #         descPrompt.entry.setText(desc)
-        #         descPrompt.entry.setReadOnly(True)
-        #
-        #         for img in newElement.ImageElement.allImages:
-        #             infos = [info.strip() for info in img.caption.text().replace(';', ',').split(',')]
-        #             for info in infos:
-        #                 if desc in infos and desc not in img.alreadyUsed:
-        #                     img.alreadyUsed.append(descPrompt)
-                        # if info == desc and desc not in img.alreadyUsed:
-                        #     img.alreadyUsed.append(descPrompt)
+        dico = {}
+        newdico = {}
+        for cap in caption:
+            instanceList = cap.split(self.subjectSeparatorContent.text().strip())
+            for instance in instanceList:
+                elements = instance.split(self.descriptionSeparatorContent.text().strip())
+                subjectName = elements[0].strip()
+                if subjectName:
+                    if not dico.get(subjectName): dico[subjectName] = []
+                    descriptions = [desc.strip() for desc in elements[1:] if desc.strip() not in dico[subjectName]]
+                    dico[subjectName] = dico[subjectName] + descriptions
+
+        for subject in dico.keys():
+            subjectPrompt = prompt_element.PromptElement(mainFrame=self)
+            subjectPrompt.entry.setText(subject)
+            subjectPrompt.entry.setReadOnly(True)
+            subjectPrompt.addButton.setEnabled(True)
+            newdico[subjectPrompt] = []
+
+            for desc in dico[subject]:
+                descPrompt = description_element.DescriptionElement(subjectPrompt, mainFrame=self)
+                descPrompt.entry.setText(desc)
+                descPrompt.entry.setReadOnly(True)
+                newdico[subjectPrompt].append(descPrompt)
+
+        for img in image_element.ImageElement.allImages:
+            Finaldico = {}
+            cap = img.caption.text()
+            instanceList = cap.split(self.subjectSeparatorContent.text().strip())
+            for instance in instanceList:
+                elements = instance.split(self.descriptionSeparatorContent.text().strip())
+                subjectName = elements[0].strip()
+                if subjectName:
+                    subjectElement = [subject for subject in newdico.keys() if subject.entry.text() == subjectName][0]
+                    if not img.usedDict.get(subjectElement): img.usedDict[subjectElement] = []
+                    for STRINGdesc in dico[subjectName]:
+                        for x in newdico[subjectElement]:
+                            if STRINGdesc == x.entry.text():
+                                img.usedDict[subjectElement].append(x)
 
 
 
@@ -260,6 +271,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.pushButton.setText("Browse")
         self.SubfolderCheckbox.setText("Include Subfolders")
         self.TxtCaptionCheckbox.setText("Txt Caption")
+        self.RandomizePromptOrderCheckbox.setText("Randomize prompt order")
         self.SeparateByInfoLabel.setText("Separate with :")
         self.subjectSeparatorLabel.setText("Subject :")
         self.descriptionSeparatorLabel.setText("Description :")

@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-import itertools, glob, os, uuid, imagesize, copy
+import itertools, glob, os, uuid, imagesize, copy, random
 
 # Local Imports
 import utils, prompt_element, description_element
@@ -16,25 +16,28 @@ class ImageElement(QtWidgets.QWidget):
         self.mainFrame = mainFrame
         self.allImages.append(self)
         self.id = next(ImageElement.idGenerator)
+        self.nameid = f"Image-{id}"
+        self.setObjectName(self.nameid)
         self.isSelected = False
         self.usedDict = {}
         self.setEnabled(True)
-        self.setMinimumSize(QtCore.QSize(200, 200))
         width, height = imagesize.get(self.path)
         if width - height <= 50:  # choose if image render as rectangle or squarre
-            self.setMaximumSize(QtCore.QSize(200, 200))
+            self.dimensions = QtCore.QSize(200, 200)
         else:
-            self.setMaximumSize(QtCore.QSize(300, 200))
+            self.dimensions = QtCore.QSize(300, 200)
+        self.setMinimumSize(self.dimensions)
+        self.setMaximumSize(self.dimensions)
         self.layout = QtWidgets.QVBoxLayout(self)
         self.Image = QtWidgets.QLabel(self)
         self.Image.setText("")
-        self.Image.setPixmap(QtGui.QPixmap(image))
+        self.Image.setPixmap(QtGui.QPixmap(image).scaled(self.dimensions.width() * 2, self.dimensions.height() * 2))
         self.Image.setScaledContents(True)
         self.layout.addWidget(self.Image)
         self.caption = QtWidgets.QLabel(self)
         self.caption.setWordWrap(True)
         self.caption.setText("")
-        #self.caption.setText(self.readCaption()) # Import
+        self.caption.setText(self.readCaption()) # Import
         self.layout.addWidget(self.caption)
 
         mainFrame.flowLayout.addWidget(self)
@@ -55,16 +58,39 @@ class ImageElement(QtWidgets.QWidget):
                 with open(onlyName + ".txt", "r") as f:
                     return f.read()
         else:
-            return os.path.splitext(self.path)[0]
+            return os.path.splitext(self.path)[0].split("_")[0]
+
+    def _dict2Caption(self):
+        subjectList = []
+        for i in self.usedDict.items():
+            a = [element.entry.text() for element in [i[0]] + i[1]] # Get all subject & desc in one list
+            subjectList.append(", ".join(a))
+        name = "; ".join(subjectList)
+        return name
+
+    # Obliged to redo the "dict2Caption" function because it is called only when saving
+    def _getRandomPromptOrder(self):
+        subjectList = []
+        for key, value in self.usedDict.items():
+            key, value = (key.entry.text(), [i.entry.text() for i in value])
+            if not value:
+                subjectList.append(key)
+                continue
+            random.shuffle(value)
+            value.insert(0, key)
+            subjectList.append(", ".join(value))
+        random.shuffle(subjectList)
+        return "; ".join(subjectList)
 
     def saveImageToCaption(self):
-        #dest_path = self.parentFolder + f"/{self.caption.text()}_{self.id}.png".
+        captionString = self._getRandomPromptOrder() if self.mainFrame.RandomizePromptOrderCheckbox.isChecked() else self.caption.text()
         if self.mainFrame.TxtCaptionCheckbox.isChecked():
             onlyName = os.path.splitext(self.path)[0]
             with open(onlyName + ".txt", "w") as f:
-                f.write(self.caption.text())
+                print(self._getRandomPromptOrder())
+                f.write(captionString)
         else:
-            dest_path = self.parentFolder + f"/{self.caption.text()}_{self.id}{str(uuid.uuid4())[0:3]}.png"
+            dest_path = self.parentFolder + f"/{captionString}_{self.id}{str(uuid.uuid4())[0:3]}.png"
             os.rename(self.path, dest_path)
             self.path = dest_path
 
@@ -74,6 +100,8 @@ class ImageElement(QtWidgets.QWidget):
         o.initFrom(self)
         p = QtGui.QPainter(self)
         self.style().drawPrimitive(QtWidgets.QStyle.PrimitiveElement.PE_Widget, o, p, self)
+        # p.end()
+        # del p
 
     def select(self):
         self.setStyleSheet("QWidget { background-color: rgb(255, 69, 69) }")
@@ -82,14 +110,6 @@ class ImageElement(QtWidgets.QWidget):
     def deselect(self):
         self.isSelected = False
         self.setStyleSheet("")
-
-    def _dict2Caption(self):
-        subjectList = []
-        for i in self.usedDict.items():
-            a = [element.entry.text() for element in [i[0]] + i[1]]
-            subjectList.append(", ".join(a))
-        name = "; ".join(subjectList)
-        return name
 
     def _removeAllElements(self):
         self.usedDict[prompt_element.PromptElement.currentSelected] = description_element.DescriptionElement.selectedDescriptions
