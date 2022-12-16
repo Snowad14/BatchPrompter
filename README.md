@@ -15,3 +15,4 @@
 | Refactor Prompt/DescritionElement using a base class   | 🛑 |
 | Import Prompts from .txt                               | 🟢  |
 | Multiple Context menu for export subject & others      | 🛑  |
+| Loading Images & prompts with a loading time           | 🛑  |
