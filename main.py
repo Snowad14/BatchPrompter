@@ -8,7 +8,7 @@ from flowlayout import FlowLayout
 import prompt_element, image_element
 
 #os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "0.9.0"
+VERSION = "0.9.1"
 
 class CustomContainer(QtWidgets.QScrollArea):
 
@@ -56,18 +56,14 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.FolderBrowserFrame = QtWidgets.QFrame(self.ContextMenu)
         self.FolderBrowserFrame.setFrameShape(QtWidgets.QFrame.Box)
         self.FolderBrowserFrame.setFrameShadow(QtWidgets.QFrame.Plain)
-        self.FolderBrowserFrame.setObjectName("FolderBrowserFrame")
+
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.FolderBrowserFrame)
-        self.horizontalLayout.setObjectName("horizontalLayout")
         self.label = QtWidgets.QLabel(self.FolderBrowserFrame)
-        self.label.setObjectName("label")
         self.horizontalLayout.addWidget(self.label)
         self.lineEdit = QtWidgets.QLineEdit(self.FolderBrowserFrame)
         self.lineEdit.setEnabled(False)
-        self.lineEdit.setObjectName("lineEdit")
         self.horizontalLayout.addWidget(self.lineEdit)
         self.pushButton = QtWidgets.QPushButton(self.FolderBrowserFrame)
-        self.pushButton.setObjectName("pushButton")
         self.pushButton.clicked.connect(self.browseImages)
 
         self.horizontalLayout.addWidget(self.pushButton)
@@ -112,6 +108,13 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.verticalLayout_4.addWidget(self.ContextMenu)
         spacerItem = QtWidgets.QSpacerItem(40, 70, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.verticalLayout_4.addItem(spacerItem)
+
+        self.promptSearchBar = QtWidgets.QLineEdit(self.LeftContainer)
+        self.verticalLayout_4.addWidget(self.promptSearchBar)
+        self.promptSearchBar.textChanged.connect(self.filterPromptBySearch)
+        controlF = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+F"), self.centralwidget)
+        controlF.activated.connect(lambda : self.promptSearchBar.setFocus())
+
         self.NameContainer = CustomContainer(self.LeftContainer, self)
         self.vbar = self.NameContainer.verticalScrollBar()
 
@@ -119,7 +122,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.NameScrollAreaContent.setGeometry(QtCore.QRect(0, 0, 292, 447))
 
         self.NameScrollAreaLayout = QtWidgets.QVBoxLayout(self.NameScrollAreaContent)
+        self.NameScrollAreaLayout.setContentsMargins(0, 9, 9, 0)
         self.NameContainer.setWidget(self.NameScrollAreaContent)
+
         self.verticalLayout_4.addWidget(self.NameContainer)
 
 
@@ -150,9 +155,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.RightContainerBottomLayout.addItem(self.RightContainerBottomSpacer)
 
         self.RightContainerBottomSearchBar = QtWidgets.QLineEdit(self.RightContainerBottomFrame)
-        self.RightContainerBottomSearchBar.textChanged.connect(self.filderBySearch)
-        controlF = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+F"), self.centralwidget)
-        controlF.activated.connect(lambda : self.RightContainerBottomSearchBar.setFocus())
+        self.RightContainerBottomSearchBar.textChanged.connect(self.filderImageBySearch)
+        controlI = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+I"), self.centralwidget)
+        controlI.activated.connect(lambda : self.RightContainerBottomSearchBar.setFocus())
 
         self.RightContainerBottomLayout.addItem(self.RightContainerBottomSpacer)
         self.RightContainerBottomLayout.addWidget(self.RightContainerBottomSearchBar)
@@ -183,7 +188,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
 
-    def filderBySearch(self):
+    def filderImageBySearch(self):
         text = self.RightContainerBottomSearchBar.text()
         for imageWidget in image_element.ImageElement.allImages:
             if text.lower() in imageWidget.caption.text().lower():
@@ -197,6 +202,14 @@ class Ui_MainWindow(QtWidgets.QWidget):
             self.NameContainer.verticalScrollBar().setValue(
                 self.NameContainer.verticalScrollBar().maximum()
             )
+
+    def filterPromptBySearch(self):
+        text = self.promptSearchBar.text()
+        for prompt in prompt_element.PromptElement.allPrompts:
+            if text.lower() in prompt.entry.text().lower():
+                prompt.parentFrame.show()
+            else:
+                prompt.parentFrame.hide()
 
     def browseImages(self):
         filepath = QtWidgets.QFileDialog.getExistingDirectory(QtWidgets.QDialog(), 'Select Folder containing Images', "C:\\Users\\Raphael\\Desktop\\Caption")
@@ -217,8 +230,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
                     image_element.ImageElement(os.path.join(root, name), name, mainFrame=self)
                     QtWidgets.QApplication.processEvents()
             if not self.SubfolderCheckbox.isChecked(): break
-        #
-
 
         # Import all captions [NEED REFACTOR]
         caption = [importedImages.caption.text() for importedImages in image_element.ImageElement.allImages]
@@ -249,21 +260,19 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 newdico[subjectPrompt].append(descPrompt)
 
         for img in image_element.ImageElement.allImages:
-            Finaldico = {}
-            cap = img.caption.text()
-            instanceList = cap.split(self.subjectSeparatorContent.text().strip())
+            instanceList = img.caption.text().split(self.subjectSeparatorContent.text().strip())
             for instance in instanceList:
                 elements = instance.split(self.descriptionSeparatorContent.text().strip())
                 subjectName = elements[0].strip()
                 if subjectName:
                     subjectElement = [subject for subject in newdico.keys() if subject.entry.text() == subjectName][0]
                     if not img.usedDict.get(subjectElement): img.usedDict[subjectElement] = []
-                    for STRINGdesc in dico[subjectName]:
+                    descriptions = [desc.strip() for desc in elements[1:]]
+                    for STRINGdesc in descriptions:
                         for x in newdico[subjectElement]:
                             if STRINGdesc == x.entry.text():
                                 img.usedDict[subjectElement].append(x)
-
-
+            img.updateCaption()
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(f"BatchPrompter V{VERSION}")

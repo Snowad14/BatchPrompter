@@ -16,8 +16,6 @@ class ImageElement(QtWidgets.QWidget):
         self.mainFrame = mainFrame
         self.allImages.append(self)
         self.id = next(ImageElement.idGenerator)
-        self.nameid = f"Image-{id}"
-        self.setObjectName(self.nameid)
         self.isSelected = False
         self.usedDict = {}
         self.setEnabled(True)
@@ -86,7 +84,6 @@ class ImageElement(QtWidgets.QWidget):
         if self.mainFrame.TxtCaptionCheckbox.isChecked():
             onlyName = os.path.splitext(self.path)[0]
             with open(onlyName + ".txt", "w") as f:
-                print(self._getRandomPromptOrder())
                 f.write(captionString)
         else:
             dest_path = self.parentFolder + f"/{captionString}_{self.id}{str(uuid.uuid4())[0:3]}.png"
@@ -125,21 +122,89 @@ class ImageElement(QtWidgets.QWidget):
 
 
     def mousePressEvent(self, QMouseEvent):
+        if QMouseEvent.buttons() == QtCore.Qt.MouseButton.LeftButton:
+            if prompt_element.PromptElement.currentSelected: # make sur user has selected a prombt
+                # Check if prompt has change and update or deselect image depending on whether the image already had all the prompts
+                if self.isSelected and self.usedDict.get(prompt_element.PromptElement.currentSelected) != description_element.DescriptionElement.selectedDescriptions:
+                    self._removeAllElements()
+                    self._addSelectedElements()
+                elif self.isSelected:
+                    self.deselect()
+                    self._removeAllElements()
+                else:
+                    self.select()
+                    self._addSelectedElements()
 
-        if prompt_element.PromptElement.currentSelected: # make sur user has selected a prombt
-            # Check if prompt has change and update or deselect image depending on whether the image already had all the prompts
-            if self.isSelected and self.usedDict.get(prompt_element.PromptElement.currentSelected) != description_element.DescriptionElement.selectedDescriptions:
-                self._removeAllElements()
-                self._addSelectedElements()
-            elif self.isSelected:
-                self.deselect()
-                self._removeAllElements()
+                self.updateCaption()
+                print(self.usedDict)
             else:
-                self.select()
-                self._addSelectedElements()
+                utils.sendErrorMessage("You must selected a Prompt")
+
+    def contextMenuEvent(self, event):
+        contextMenu = QtWidgets.QMenu(self)
+        openImage = contextMenu.addAction("Open Image")
+        addPromptsMenu = contextMenu.addMenu("Add child prompt from")
+        removePromptsMenu = contextMenu.addMenu("Remove child prompt from")
+
+        # Create all the Differents prompts & descriptions that will be show in the menu
+        for prompt in prompt_element.PromptElement.allPrompts:
+            if prompt.entry.text():
+                if self.usedDict.get(prompt) != None:
+                    removePromptsMenu.addAction(prompt.entry.text())
+                    if not len(prompt.descriptions) == len(self.usedDict[prompt]):
+                        promptAddMenu = addPromptsMenu.addMenu(prompt.entry.text())
+                        for description in prompt.descriptions:
+                            if description not in self.usedDict[prompt]:
+                                promptAddMenu.addAction(description.entry.text())
+                    if self.usedDict.get(prompt) != []:
+                        promptRemoveMenu = removePromptsMenu.addMenu(prompt.entry.text())
+                        for descriptions in prompt.descriptions:
+                            if descriptions in self.usedDict[prompt]:
+                                promptRemoveMenu.addAction(descriptions.entry.text())
+                else:
+                    addPromptsMenu.addAction(prompt.entry.text())
+                    promptAddMenu = addPromptsMenu.addMenu(prompt.entry.text())
+                    for desc in prompt.descriptions:
+                        promptAddMenu.addAction(desc.entry.text())
+
+        action = contextMenu.exec_(self.mapToGlobal(event.pos()))
+
+        if action == openImage:
+            openImageDialog = QtWidgets.QMessageBox()
+            openImageDialog.setWindowTitle("Image Content")
+            openImageDialog.setIconPixmap(QtGui.QPixmap(self.path).scaled(self.dimensions.width() * 3, self.dimensions.height() * 3))
+            openImageDialog.exec_()
+
+        # Bad Code! If you know how I can directly activate a specific function with an argument on click please contact me, here I try to find through their texts
+        if action:
+            parent = action.parent()
+            while parent.parent() is not None:
+                if parent == addPromptsMenu:
+                    for prompt in prompt_element.PromptElement.allPrompts:
+                        if prompt.entry.text() == action.text() or prompt.entry.text() == action.parent().title():
+                            if not self.usedDict.get(prompt): self.usedDict[prompt] = []
+
+                    for prompt in prompt_element.PromptElement.allPrompts:
+                        if prompt.entry.text() == action.parent().title():
+                            for desc in prompt.descriptions:
+                                if desc.entry.text() == action.text():
+                                    print('adding ' + action.text())
+                                    self.usedDict[prompt].append(desc)
+
+                elif parent == removePromptsMenu:
+                    for prompt in prompt_element.PromptElement.allPrompts:
+                        if prompt.entry.text() == action.text():
+                            del self.usedDict[prompt]
+
+                    for prompt in self.usedDict.keys():
+                        if prompt.entry.text() == action.parent().title():
+                            for desc in self.usedDict[prompt]:
+                                if desc.entry.text() == action.text():
+                                    print('removing ' + action.text())
+                                    self.usedDict[prompt].remove(desc)
+
+                parent = parent.parent()
 
             self.updateCaption()
-            print(self.usedDict)
-        else:
-            utils.sendErrorMessage("You must selected a Prompt")
+
 

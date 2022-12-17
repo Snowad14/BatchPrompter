@@ -4,6 +4,12 @@
 
 ![Screenshots](https://i.imgur.com/SkuKd11.jpg)
 
+## ⌨️ ShortCut
+| ShortCut                                          |              Effect               |
+|:--------------------------------------------------|:---------------------------------:|
+| Control+F                                         | Select the search bar for prompts |
+| Control+I                                         | Select the search bar for Images  |
+
 ## 📋 Installation
   ...
 
