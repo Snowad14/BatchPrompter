@@ -54,6 +54,7 @@ class PromptElement(QtWidgets.QWidget):
         self.collapseButton.setAutoFillBackground(False)
         self.collapseButton.setStyleSheet("")
         self.collapseButton.setText("")
+        self.collapseButton.hide()
 
         collapseIcon = QtGui.QIcon()
         pixmap = QtGui.QPixmap("assets/triangle.svg")
@@ -103,17 +104,29 @@ class PromptElement(QtWidgets.QWidget):
     def collapsePrompt(self):
         collapseIcon = QtGui.QIcon()
         pixmap = QtGui.QPixmap("assets/triangle.svg")
-        if not self.isCollapsed:
-            pixmap = pixmap.transformed(QtGui.QTransform().rotate(270 if not self.isCollapsed else 0))
-            self.isCollapsed = True
-            for desc in self.descriptions:
-                desc.hide()
-        else:
+        if self.isCollapsed:
             self.isCollapsed = False
             for desc in self.descriptions:
                 desc.show()
+        else:
+            pixmap = pixmap.transformed(QtGui.QTransform().rotate(270))
+            self.isCollapsed = True
+            for desc in self.descriptions:
+                desc.hide()
+
         collapseIcon.addPixmap(pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.collapseButton.setIcon(collapseIcon)
+
+    def getNonEmptyDescriptions(self):
+        return [i for i in self.descriptions if i.entry.text() != ""]
+
+    def addDescriptionElement(self, element):
+        self.descriptions.append(element)
+        if len(self.descriptions) > 0: self.collapseButton.show()
+
+    def removeDescriptionElement(self, element):
+        self.descriptions.remove(element)
+        if len(self.descriptions) <= 0: self.collapseButton.hide()
 
     def create_description(self):
         new = description_element.DescriptionElement(self, self.mainFrame)
@@ -127,16 +140,19 @@ class PromptElement(QtWidgets.QWidget):
             self.addButton.setEnabled(True)
 
     def delete_element(self):
-        if utils.sendConfirmMessage("Are you sure to delete this prompt ?"):
+        concernedImg = [img for img in image_element.ImageElement.allImages if self in img.usedDict.keys()]
+        if utils.sendConfirmMessage(f"Are you sure you want to delete this prompt from {len(concernedImg)} images?"):
             self.parentFrame.close()
-            for img in image_element.ImageElement.allImages:
-                if self in img.usedDict.keys():
-                    del img.usedDict[self]
-                    img.updateCaption()
-                    if self == PromptElement.currentSelected: img.deselect()
+            for img in concernedImg:
+                del img.usedDict[self]
+                img.updateCaption()
+                if self == PromptElement.currentSelected: img.deselect()
+                description_element.DescriptionElement.selectedDescriptions.clear()
 
+            PromptElement.allPrompts.remove(self)
             if self == PromptElement.currentSelected:
                 PromptElement.currentSelected = None
+
 
     def select(self):
         self.entry.setStyleSheet("QWidget { background-color: rgb(68, 140, 203) }")
@@ -145,7 +161,7 @@ class PromptElement(QtWidgets.QWidget):
     def deselect(self):
         self.entry.setStyleSheet("")
 
-    def _deselectAllElement(self):
+    def deselectAllElement(self):
         if PromptElement.currentSelected: # Make sure one PromptElement is selected
             PromptElement.currentSelected.deselect()
 
@@ -156,15 +172,16 @@ class PromptElement(QtWidgets.QWidget):
         for img in image_element.ImageElement.getSelectedImages():  # unselet all image when changing prompt
             img.deselect()
 
+    def selectAllChildImages(self):
+        for img in image_element.ImageElement.allImages:
+            if self in img.usedDict.keys():
+                img.select()
+
     def selectEntry(self):
         if self.entry.isReadOnly(): # only after user created the prombt
-            self._deselectAllElement()
+            self.deselectAllElement()
 
             # select images containing the new prompt
-            for img in image_element.ImageElement.allImages:
-                # if self in img.usedPrompt:
-                #     img.select()
-                if self in img.usedDict.keys():
-                    img.select()
+            self.selectAllChildImages()
 
             self.select()

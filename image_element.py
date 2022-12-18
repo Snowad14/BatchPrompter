@@ -1,3 +1,5 @@
+import idlelib.config_key
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 import itertools, glob, os, uuid, imagesize, copy, random
 
@@ -100,7 +102,7 @@ class ImageElement(QtWidgets.QWidget):
         # del p
 
     def select(self):
-        self.setStyleSheet("QWidget { background-color: rgb(255, 69, 69) }")
+        self.setStyleSheet("background-color: rgb(255, 69, 69)")
         self.isSelected = True
 
     def deselect(self):
@@ -113,13 +115,6 @@ class ImageElement(QtWidgets.QWidget):
 
     def _addSelectedElements(self):
         self.usedDict[prompt_element.PromptElement.currentSelected] = [*description_element.DescriptionElement.selectedDescriptions]
-
-    def _hasAllSelectedPrompt(self):
-        for desc in description_element.DescriptionElement.selectedDescriptions:
-            if desc not in self.usedDict.values():
-                return False
-        return True
-
 
     def mousePressEvent(self, QMouseEvent):
         if QMouseEvent.buttons() == QtCore.Qt.MouseButton.LeftButton:
@@ -142,20 +137,22 @@ class ImageElement(QtWidgets.QWidget):
 
     def contextMenuEvent(self, event):
         contextMenu = QtWidgets.QMenu(self)
+        contextMenu.setStyleSheet("background-color: rgb(112, 112, 112)")
         openImage = contextMenu.addAction("Open Image")
         addPromptsMenu = contextMenu.addMenu("Add child prompt from")
         removePromptsMenu = contextMenu.addMenu("Remove child prompt from")
 
         # Create all the Differents prompts & descriptions that will be show in the menu
+        # I did not find how to make a Qmenu clickable, if someone knows how to do it please contact me
         for prompt in prompt_element.PromptElement.allPrompts:
             if prompt.entry.text():
                 if self.usedDict.get(prompt) != None:
                     removePromptsMenu.addAction(prompt.entry.text())
-                    if not len(prompt.descriptions) == len(self.usedDict[prompt]):
+                    if not len(prompt.descriptions) == len(self.usedDict[prompt]) and self.usedDict[prompt] != prompt.getNonEmptyDescriptions():
                         promptAddMenu = addPromptsMenu.addMenu(prompt.entry.text())
                         for description in prompt.descriptions:
                             if description not in self.usedDict[prompt]:
-                                promptAddMenu.addAction(description.entry.text())
+                               if description.entry.text() != "": promptAddMenu.addAction(description.entry.text())
                     if self.usedDict.get(prompt) != []:
                         promptRemoveMenu = removePromptsMenu.addMenu(prompt.entry.text())
                         for descriptions in prompt.descriptions:
@@ -163,9 +160,10 @@ class ImageElement(QtWidgets.QWidget):
                                 promptRemoveMenu.addAction(descriptions.entry.text())
                 else:
                     addPromptsMenu.addAction(prompt.entry.text())
-                    promptAddMenu = addPromptsMenu.addMenu(prompt.entry.text())
-                    for desc in prompt.descriptions:
-                        promptAddMenu.addAction(desc.entry.text())
+                    if prompt.getNonEmptyDescriptions():
+                        promptAddMenu = addPromptsMenu.addMenu(prompt.entry.text())
+                        for desc in prompt.descriptions:
+                            if desc.entry.text() != "": promptAddMenu.addAction(desc.entry.text())
 
         action = contextMenu.exec_(self.mapToGlobal(event.pos()))
 
@@ -183,28 +181,28 @@ class ImageElement(QtWidgets.QWidget):
                     for prompt in prompt_element.PromptElement.allPrompts:
                         if prompt.entry.text() == action.text() or prompt.entry.text() == action.parent().title():
                             if not self.usedDict.get(prompt): self.usedDict[prompt] = []
-
+                            if prompt_element.PromptElement.currentSelected in self.usedDict.keys(): self.select()
                     for prompt in prompt_element.PromptElement.allPrompts:
                         if prompt.entry.text() == action.parent().title():
                             for desc in prompt.descriptions:
                                 if desc.entry.text() == action.text():
-                                    print('adding ' + action.text())
                                     self.usedDict[prompt].append(desc)
+                                    if prompt_element.PromptElement.currentSelected in self.usedDict.keys(): self.select()
 
                 elif parent == removePromptsMenu:
                     for prompt in prompt_element.PromptElement.allPrompts:
                         if prompt.entry.text() == action.text():
                             del self.usedDict[prompt]
+                            if not prompt_element.PromptElement.currentSelected in self.usedDict.keys(): self.deselect()
 
                     for prompt in self.usedDict.keys():
                         if prompt.entry.text() == action.parent().title():
                             for desc in self.usedDict[prompt]:
                                 if desc.entry.text() == action.text():
-                                    print('removing ' + action.text())
                                     self.usedDict[prompt].remove(desc)
+                                    if not prompt_element.PromptElement.currentSelected in self.usedDict.keys(): self.deselect()
 
                 parent = parent.parent()
 
             self.updateCaption()
-
 

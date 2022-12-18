@@ -38,7 +38,7 @@ class DescriptionElement(QtWidgets.QWidget):
         self.parentLayout.addWidget(self)
         self.promptParent.parentFrameLayout.addWidget(self)
 
-        self.promptParent.descriptions.append(self)
+        self.promptParent.addDescriptionElement(self)
         self.deleteButton.clicked.connect(self.delete_element)
         self.entry.returnPressed.connect(self.duplicate_element)
         self.entry.selectionChanged.connect(lambda: self.entry.setSelection(0, 0))  # disable selection
@@ -52,7 +52,7 @@ class DescriptionElement(QtWidgets.QWidget):
 
     def delete_element(self):
         self.close()
-        self.promptParent.descriptions.remove(self)
+        self.promptParent.removeDescriptionElement(self)
         for img in image_element.ImageElement.allImages:
             if img.usedDict.get(self.promptParent) and self in img.usedDict[self.promptParent]:
                 img.usedDict[self.promptParent].remove(self)
@@ -77,3 +77,11 @@ class DescriptionElement(QtWidgets.QWidget):
                     self.deselect()
                 else:
                     self.select()
+            else:
+                if prompt_element.PromptElement.currentSelected: prompt_element.PromptElement.currentSelected.deselectAllElement()
+                prompt_element.PromptElement.currentSelected = self.promptParent
+                prompt_element.PromptElement.currentSelected.selectAllChildImages()
+                self.promptParent.select()
+                self.select()
+
+

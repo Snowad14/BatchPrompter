@@ -8,7 +8,7 @@ from flowlayout import FlowLayout
 import prompt_element, image_element
 
 #os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 class CustomContainer(QtWidgets.QScrollArea):
 
@@ -110,6 +110,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.verticalLayout_4.addItem(spacerItem)
 
         self.promptSearchBar = QtWidgets.QLineEdit(self.LeftContainer)
+        self.promptSearchBar.setPlaceholderText("Search Prompts or descriptions..")
         self.verticalLayout_4.addWidget(self.promptSearchBar)
         self.promptSearchBar.textChanged.connect(self.filterPromptBySearch)
         controlF = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+F"), self.centralwidget)
@@ -155,6 +156,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.RightContainerBottomLayout.addItem(self.RightContainerBottomSpacer)
 
         self.RightContainerBottomSearchBar = QtWidgets.QLineEdit(self.RightContainerBottomFrame)
+        self.RightContainerBottomSearchBar.setPlaceholderText("Search text in images captions..")
         self.RightContainerBottomSearchBar.textChanged.connect(self.filderImageBySearch)
         controlI = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+I"), self.centralwidget)
         controlI.activated.connect(lambda : self.RightContainerBottomSearchBar.setFocus())
@@ -206,8 +208,12 @@ class Ui_MainWindow(QtWidgets.QWidget):
     def filterPromptBySearch(self):
         text = self.promptSearchBar.text()
         for prompt in prompt_element.PromptElement.allPrompts:
+            descs = " ".join([desc.entry.text().lower() for desc in prompt.descriptions])
             if text.lower() in prompt.entry.text().lower():
                 prompt.parentFrame.show()
+            elif text.lower() in descs:
+                if prompt.isCollapsed:
+                    prompt.collapsePrompt()
             else:
                 prompt.parentFrame.hide()
 
@@ -258,6 +264,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 descPrompt.entry.setText(desc)
                 descPrompt.entry.setReadOnly(True)
                 newdico[subjectPrompt].append(descPrompt)
+                # subjectPrompt.addDescriptionElement(descPrompt)
 
         for img in image_element.ImageElement.allImages:
             instanceList = img.caption.text().split(self.subjectSeparatorContent.text().strip())
