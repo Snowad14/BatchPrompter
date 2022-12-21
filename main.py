@@ -8,7 +8,7 @@ from flowlayout import FlowLayout
 import prompt_element, image_element
 
 #os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "1.0.2"
+VERSION = "1.0.3"
 
 class CustomContainer(QtWidgets.QScrollArea):
 
@@ -253,6 +253,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
         startPath = self.config.get("DEFAULT", "Last_Folder_Path") if self.config.has_option("DEFAULT", "Last_Folder_Path") else ""
         filepath = QtWidgets.QFileDialog.getExistingDirectory(QtWidgets.QDialog(), 'Select Folder containing Images', startPath)
         if filepath:
+            if prompt_element.PromptElement.currentSelected:
+                prompt_element.PromptElement.currentSelected.deselectAllElement()
+                prompt_element.PromptElement.currentSelected = None
             self.lineEdit.setText(filepath)
             self.importImage(filepath)
 
@@ -263,17 +266,29 @@ class Ui_MainWindow(QtWidgets.QWidget):
             image.deleteLater()
         image_element.ImageElement.allImages.clear()
 
+        choosedImgs = []
         for root, dirs, files in os.walk(folder_path):
             for name in os_sorted(files):
                 if name.endswith(('.jpg', '.png')):
-                    image_element.ImageElement(os.path.join(root, name), name, mainFrame=self)
-                    QtWidgets.QApplication.processEvents()
+                    choosedImgs.append((os.path.join(root, name), name))
             if not self.SubfolderCheckbox.isChecked(): break
+
+        progressBar = QtWidgets.QProgressBar()
+        progressBar.setRange(0, len(choosedImgs))
+        self.horizontalLayout_4.addWidget(progressBar)
+        self.RightContainerFrame.hide()
+        for c, imgInfos in enumerate(choosedImgs):
+            image_element.ImageElement(imgInfos[0], imgInfos[1], mainFrame=self)
+            progressBar.setValue(c)
+            QtWidgets.QApplication.processEvents()
+        progressBar.setParent(None)
+        progressBar.deleteLater()
+        self.RightContainerFrame.show()
 
         # Import all captions [NEED REFACTOR]
         caption = [importedImages.caption.text() for importedImages in image_element.ImageElement.allImages]
 
-        dico = {} #TODO : make sure not to create the same prompts twice when opening another folder
+        dico = {}
         newdico = {}
         for cap in caption:
             instanceList = cap.split(self.subjectSeparatorContent.text().strip())
@@ -286,18 +301,23 @@ class Ui_MainWindow(QtWidgets.QWidget):
                     dico[subjectName] = dico[subjectName] + descriptions
 
         for subject in dico.keys():
-            subjectPrompt = prompt_element.PromptElement(mainFrame=self)
-            subjectPrompt.entry.setText(subject)
-            subjectPrompt.entry.setReadOnly(True)
-            subjectPrompt.addButton.setEnabled(True)
-            newdico[subjectPrompt] = []
+            target_prompt = prompt_element.PromptElement.getPromptWithText(subject)
+            if target_prompt:
+                subjectPrompt = target_prompt
+                newdico[subjectPrompt] = target_prompt.descriptions
+            else:
+                subjectPrompt = prompt_element.PromptElement(mainFrame=self)
+                subjectPrompt.entry.setText(subject)
+                subjectPrompt.entry.setReadOnly(True)
+                subjectPrompt.addButton.setEnabled(True)
+                newdico[subjectPrompt] = []
 
             for desc in dico[subject]:
-                descPrompt = description_element.DescriptionElement(subjectPrompt, mainFrame=self)
-                descPrompt.entry.setText(desc)
-                descPrompt.entry.setReadOnly(True)
-                newdico[subjectPrompt].append(descPrompt)
-                # subjectPrompt.addDescriptionElement(descPrompt)
+                if desc not in [i.entry.text() for i in subjectPrompt.descriptions]:
+                    descPrompt = description_element.DescriptionElement(subjectPrompt, mainFrame=self)
+                    descPrompt.entry.setText(desc)
+                    descPrompt.entry.setReadOnly(True)
+                    newdico[subjectPrompt].append(descPrompt)
 
         for img in image_element.ImageElement.allImages:
             instanceList = img.caption.text().split(self.subjectSeparatorContent.text().strip())

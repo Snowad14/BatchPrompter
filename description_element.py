@@ -44,8 +44,13 @@ class DescriptionElement(QtWidgets.QWidget):
         self.entry.selectionChanged.connect(lambda: self.entry.setSelection(0, 0))  # disable selection
         self.entry.clicked.connect(self.selectEntry)
 
+    def isUniqueElement(self):
+        if [desc.entry.text() for desc in self.promptParent.descriptions].count(self.entry.text()) > 1:
+            return False
+        return True
+
     def duplicate_element(self):
-        if self.entry.text():
+        if self.entry.text() and self.isUniqueElement():
             self.entry.setReadOnly(True)
             new = DescriptionElement(self.promptParent, self.mainFrame)
             new.entry.setFocus()

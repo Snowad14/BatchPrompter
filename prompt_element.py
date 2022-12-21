@@ -101,6 +101,12 @@ class PromptElement(QtWidgets.QWidget):
         self.entry.returnPressed.connect(self.duplicate_element)
         self.entry.selectionChanged.connect(lambda: self.entry.setSelection(0, 0)) # disable selection
 
+    @staticmethod
+    def getPromptWithText(txt):
+        for i in PromptElement.allPrompts:
+            if i.entry.text() == txt:
+                return i
+
     def collapsePrompt(self):
         collapseIcon = QtGui.QIcon()
         pixmap = QtGui.QPixmap("assets/triangle.svg")
@@ -132,8 +138,13 @@ class PromptElement(QtWidgets.QWidget):
         new = description_element.DescriptionElement(self, self.mainFrame)
         new.entry.setFocus()
 
+    def isUniqueElement(self):
+        if [prompt.entry.text() for prompt in PromptElement.allPrompts].count(self.entry.text()) > 1:
+            return False
+        return True
+
     def duplicate_element(self):
-        if self.entry.text():
+        if self.entry.text() and self.isUniqueElement():
             self.entry.setReadOnly(True)
             new = PromptElement(self.mainFrame)
             new.entry.setFocus()
@@ -160,6 +171,7 @@ class PromptElement(QtWidgets.QWidget):
 
     def deselect(self):
         self.entry.setStyleSheet("")
+        # TODO : Make deselect currentSelected = None
 
     def deselectAllElement(self):
         if PromptElement.currentSelected: # Make sure one PromptElement is selected
