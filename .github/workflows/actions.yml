@@ -37,10 +37,9 @@ jobs:
           pip install -r requirements.txt
           
       - name:  Install fuse on linux
-        run:   |
-               if [ "$RUNNER_OS" == "Linux" ]; then
-                    apt install important_linux_software
-        shell: bash
+        if: runner.os == 'windows'
+        run: |
+          apt install fuse
   
       - name: Build Executable
         uses: Nuitka/Nuitka-Action@v0.4
