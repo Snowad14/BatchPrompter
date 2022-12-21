@@ -8,7 +8,7 @@ from flowlayout import FlowLayout
 import prompt_element, image_element
 
 #os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "1.0.3"
+VERSION = "1.0.4"
 
 class CustomContainer(QtWidgets.QScrollArea):
 
@@ -121,7 +121,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         if self.config.has_option('DEFAULT', 'Description_Separator'):
             self.descriptionSeparatorContent.setText(self.config.get('DEFAULT', 'Description_Separator').strip('"'))
         else:
-            self.descriptionSeparatorContent.setText("; ")
+            self.descriptionSeparatorContent.setText(", ")
         self.descriptionSeparatorContent.textChanged.connect(self.updateConfig)
         self.horizontalLayout_2.addWidget(self.descriptionSeparatorContent)
 
