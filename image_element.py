@@ -36,7 +36,6 @@ class ImageElement(QtWidgets.QWidget):
         self.layout.addWidget(self.Image)
         self.caption = QtWidgets.QLabel(self)
         self.caption.setWordWrap(True)
-        self.caption.setText("")
         self.caption.setText(self.readCaption()) # Import
         self.layout.addWidget(self.caption)
 
@@ -58,7 +57,8 @@ class ImageElement(QtWidgets.QWidget):
                 with open(onlyName + ".txt", "r") as f:
                     return f.read()
         else:
-            return os.path.splitext(self.path)[0].split("_")[0]
+            return os.path.splitext(self.name)[0].split('_')[0]
+
 
     def _dict2Caption(self):
         subjectList = []
@@ -88,7 +88,7 @@ class ImageElement(QtWidgets.QWidget):
             with open(onlyName + ".txt", "w") as f:
                 f.write(captionString)
         else:
-            dest_path = self.parentFolder + f"/{captionString}_{self.id}{str(uuid.uuid4())[0:3]}.png"
+            dest_path = self.parentFolder + f"/{captionString}_{self.id}.png"
             os.rename(self.path, dest_path)
             self.path = dest_path
 

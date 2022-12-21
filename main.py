@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from natsort import os_sorted
-import os, sys, glob
+import os, sys, glob, configparser
 
 import description_element
 import utils
@@ -8,7 +8,7 @@ from flowlayout import FlowLayout
 import prompt_element, image_element
 
 #os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 
 class CustomContainer(QtWidgets.QScrollArea):
 
@@ -29,10 +29,14 @@ class CustomContainer(QtWidgets.QScrollArea):
     def dropEvent(self, e):
         e.accept()
 
-
 class Ui_MainWindow(QtWidgets.QWidget):
 
     def setupUi(self, MainWindow):
+
+        self.config = configparser.ConfigParser()
+        self.configPath = os.getenv('APPDATA') + '\\BatchPrompter.cfg'
+        self.config.read(self.configPath)
+
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1200, 800)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -62,6 +66,8 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.horizontalLayout.addWidget(self.label)
         self.lineEdit = QtWidgets.QLineEdit(self.FolderBrowserFrame)
         self.lineEdit.setEnabled(False)
+        self.lineEdit.textChanged.connect(self.updateConfig)
+
         self.horizontalLayout.addWidget(self.lineEdit)
         self.pushButton = QtWidgets.QPushButton(self.FolderBrowserFrame)
         self.pushButton.clicked.connect(self.browseImages)
@@ -70,14 +76,21 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.verticalLayout_2.addWidget(self.FolderBrowserFrame)
 
         self.SubfolderCheckbox = QtWidgets.QCheckBox(self.ContextMenu)
+        if self.config.has_option('DEFAULT', 'Include_Subfolder'): self.SubfolderCheckbox.setChecked(self.config.getboolean('DEFAULT', 'Include_Subfolder'))
+        self.SubfolderCheckbox.stateChanged.connect(self.updateConfig)
         self.verticalLayout_2.addWidget(self.SubfolderCheckbox)
 
         self.TxtCaptionCheckbox = QtWidgets.QCheckBox(self.ContextMenu)
-        self.TxtCaptionCheckbox.setChecked(True)
+        if self.config.has_option('DEFAULT', 'Txt_Caption'):
+            self.TxtCaptionCheckbox.setChecked(self.config.getboolean('DEFAULT', 'Txt_Caption'))
+        else:
+            self.TxtCaptionCheckbox.setChecked(True)
+        self.TxtCaptionCheckbox.stateChanged.connect(self.updateConfig)
         self.verticalLayout_2.addWidget(self.TxtCaptionCheckbox)
 
         self.RandomizePromptOrderCheckbox = QtWidgets.QCheckBox(self.ContextMenu)
-        self.RandomizePromptOrderCheckbox.setChecked(True)
+        if self.config.has_option('DEFAULT', 'Randomize_Order'): self.RandomizePromptOrderCheckbox.setChecked(self.config.getboolean('DEFAULT', 'Randomize_Order'))
+        self.RandomizePromptOrderCheckbox.stateChanged.connect(self.updateConfig)
         self.verticalLayout_2.addWidget(self.RandomizePromptOrderCheckbox)
 
         self.SeparateByInfoLabel = QtWidgets.QLabel(self.ContextMenu)
@@ -93,14 +106,23 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.horizontalLayout_2.addWidget(self.subjectSeparatorLabel)
 
         self.subjectSeparatorContent = QtWidgets.QLineEdit(self.PrombtSeparatorFrame)
-        self.subjectSeparatorContent.setText("; ")
+        if self.config.has_option('DEFAULT', 'Subject_Separator'):
+            self.subjectSeparatorContent.setText(self.config.get('DEFAULT', 'Subject_Separator').strip('"'))
+        else:
+            self.subjectSeparatorContent.setText("; ")
+        self.subjectSeparatorContent.textChanged.connect(self.updateConfig)
         self.horizontalLayout_2.addWidget(self.subjectSeparatorContent)
 
 
         self.descriptionSeparatorLabel = QtWidgets.QLabel(self.PrombtSeparatorFrame)
         self.horizontalLayout_2.addWidget(self.descriptionSeparatorLabel)
+
         self.descriptionSeparatorContent = QtWidgets.QLineEdit(self.PrombtSeparatorFrame)
-        self.descriptionSeparatorContent.setText(", ")
+        if self.config.has_option('DEFAULT', 'Description_Separator'):
+            self.descriptionSeparatorContent.setText(self.config.get('DEFAULT', 'Description_Separator').strip('"'))
+        else:
+            self.descriptionSeparatorContent.setText("; ")
+        self.descriptionSeparatorContent.textChanged.connect(self.updateConfig)
         self.horizontalLayout_2.addWidget(self.descriptionSeparatorContent)
 
         # self.horizontalLayout_2.addWidget(self.lineEdit_2)
@@ -189,6 +211,16 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+    def updateConfig(self):
+        self.config["DEFAULT"]["Last_Folder_Path"] = self.lineEdit.text()
+        self.config["DEFAULT"]["Include_Subfolder"] = str(self.SubfolderCheckbox.isChecked())
+        self.config["DEFAULT"]["Txt_Caption"] = str(self.TxtCaptionCheckbox.isChecked())
+        self.config["DEFAULT"]["Randomize_Order"] = str(self.RandomizePromptOrderCheckbox.isChecked())
+        self.config["DEFAULT"]["Subject_Separator"] = f'"{self.subjectSeparatorContent.text()}"'
+        self.config["DEFAULT"]["Description_Separator"] = f'"{self.descriptionSeparatorContent.text()}"'
+
+        with open(self.configPath, 'w') as configfile:  # save
+            self.config.write(configfile)
 
     def filderImageBySearch(self):
         text = self.RightContainerBottomSearchBar.text()
@@ -218,7 +250,8 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 prompt.parentFrame.hide()
 
     def browseImages(self):
-        filepath = QtWidgets.QFileDialog.getExistingDirectory(QtWidgets.QDialog(), 'Select Folder containing Images', "C:\\Users\\Raphael\\Desktop\\Caption")
+        startPath = self.config.get("DEFAULT", "Last_Folder_Path") if self.config.has_option("DEFAULT", "Last_Folder_Path") else ""
+        filepath = QtWidgets.QFileDialog.getExistingDirectory(QtWidgets.QDialog(), 'Select Folder containing Images', startPath)
         if filepath:
             self.lineEdit.setText(filepath)
             self.importImage(filepath)
@@ -240,7 +273,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         # Import all captions [NEED REFACTOR]
         caption = [importedImages.caption.text() for importedImages in image_element.ImageElement.allImages]
 
-        dico = {}
+        dico = {} #TODO : make sure not to create the same prompts twice when opening another folder
         newdico = {}
         for cap in caption:
             instanceList = cap.split(self.subjectSeparatorContent.text().strip())
