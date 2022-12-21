@@ -30,7 +30,6 @@ class ImageElement(QtWidgets.QWidget):
         self.setMaximumSize(self.dimensions)
         self.layout = QtWidgets.QVBoxLayout(self)
         self.Image = QtWidgets.QLabel(self)
-        self.Image.setText("")
         self.Image.setPixmap(QtGui.QPixmap(image).scaled(self.dimensions.width() * 2, self.dimensions.height() * 2))
         self.Image.setScaledContents(True)
         self.layout.addWidget(self.Image)
