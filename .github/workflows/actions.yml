@@ -37,7 +37,7 @@ jobs:
           pip install -r requirements.txt
           
       - name:  Install fuse on linux
-        if: runner.os == 'ubuntu'
+        if: runner.os == 'Linux'
         run: |
           apt install fuse
   
