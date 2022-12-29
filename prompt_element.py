@@ -15,6 +15,16 @@ class PromptContainer(QtWidgets.QFrame):
         self.setContentsMargins(0, 0, 0, 1)
         self.setAcceptDrops(True)
 
+        self.menu = QtWidgets.QMenu(self)
+        action1 = QtWidgets.QAction("Action 1", self)
+        action2 = QtWidgets.QAction("Action 2", self)
+        self.menu.addAction(action1)
+        self.menu.addAction(action2)
+
+        # Affectation du menu contextuel au widget
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.showContextMenu)
+
     def dragEnterEvent(self, e):
         e.accept()
 
@@ -23,6 +33,9 @@ class PromptContainer(QtWidgets.QFrame):
 
     def dropEvent(self, e):
         e.accept()
+
+    def showContextMenu(self, pos):
+        self.menu.popup(self.mapToGlobal(pos))
 
 class PromptElement(QtWidgets.QWidget):
 
@@ -62,7 +75,7 @@ class PromptElement(QtWidgets.QWidget):
         self.collapseButton.setIcon(collapseIcon)
         self.collapseButton.setStyleSheet("background: transparent;")
 
-        self.entry = utils.clickableQLineEdit(self)
+        self.entry = utils.clickableQLineEdit(self, self.parentFrame.menu)
         self.entry.setMinimumSize(QtCore.QSize(150, 35))
 
         self.addButton = QtWidgets.QPushButton(self)
@@ -152,7 +165,7 @@ class PromptElement(QtWidgets.QWidget):
 
     def delete_element(self):
         concernedImg = [img for img in image_element.ImageElement.allImages if self in img.usedDict.keys()]
-        if utils.sendConfirmMessage(f"Are you sure you want to delete this prompt from {len(concernedImg)} images?"):
+        if len(concernedImg) <= 0 or utils.sendConfirmMessage(f"Are you sure you want to delete this prompt from {len(concernedImg)} images?"):
             self.parentFrame.close()
             for img in concernedImg:
                 del img.usedDict[self]

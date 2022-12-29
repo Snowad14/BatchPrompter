@@ -8,7 +8,7 @@ from flowlayout import FlowLayout
 import prompt_element, image_element
 
 #os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "1.0.4"
+VERSION = "1.0.5"
 
 class CustomContainer(QtWidgets.QScrollArea):
 
@@ -49,13 +49,13 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.LeftContainer.setFrameShape(QtWidgets.QFrame.Box)
         self.LeftContainer.setFrameShadow(QtWidgets.QFrame.Plain)
         self.LeftContainer.setMaximumSize(338, 50000)
-        self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.LeftContainer)
+        self.LeftContainerLayout = QtWidgets.QVBoxLayout(self.LeftContainer)
 
         self.ContextMenu = QtWidgets.QFrame(self.LeftContainer)
         self.ContextMenu.setFrameShape(QtWidgets.QFrame.Box)
         self.ContextMenu.setFrameShadow(QtWidgets.QFrame.Plain)
 
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.ContextMenu)
+        self.ContextMenuLayout = QtWidgets.QVBoxLayout(self.ContextMenu)
 
         self.FolderBrowserFrame = QtWidgets.QFrame(self.ContextMenu)
         self.FolderBrowserFrame.setFrameShape(QtWidgets.QFrame.Box)
@@ -73,12 +73,12 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.pushButton.clicked.connect(self.browseImages)
 
         self.horizontalLayout.addWidget(self.pushButton)
-        self.verticalLayout_2.addWidget(self.FolderBrowserFrame)
+        self.ContextMenuLayout.addWidget(self.FolderBrowserFrame)
 
         self.SubfolderCheckbox = QtWidgets.QCheckBox(self.ContextMenu)
         if self.config.has_option('DEFAULT', 'Include_Subfolder'): self.SubfolderCheckbox.setChecked(self.config.getboolean('DEFAULT', 'Include_Subfolder'))
         self.SubfolderCheckbox.stateChanged.connect(self.updateConfig)
-        self.verticalLayout_2.addWidget(self.SubfolderCheckbox)
+        self.ContextMenuLayout.addWidget(self.SubfolderCheckbox)
 
         self.TxtCaptionCheckbox = QtWidgets.QCheckBox(self.ContextMenu)
         if self.config.has_option('DEFAULT', 'Txt_Caption'):
@@ -86,24 +86,24 @@ class Ui_MainWindow(QtWidgets.QWidget):
         else:
             self.TxtCaptionCheckbox.setChecked(True)
         self.TxtCaptionCheckbox.stateChanged.connect(self.updateConfig)
-        self.verticalLayout_2.addWidget(self.TxtCaptionCheckbox)
+        self.ContextMenuLayout.addWidget(self.TxtCaptionCheckbox)
 
         self.RandomizePromptOrderCheckbox = QtWidgets.QCheckBox(self.ContextMenu)
         if self.config.has_option('DEFAULT', 'Randomize_Order'): self.RandomizePromptOrderCheckbox.setChecked(self.config.getboolean('DEFAULT', 'Randomize_Order'))
         self.RandomizePromptOrderCheckbox.stateChanged.connect(self.updateConfig)
-        self.verticalLayout_2.addWidget(self.RandomizePromptOrderCheckbox)
+        self.ContextMenuLayout.addWidget(self.RandomizePromptOrderCheckbox)
 
         self.SeparateByInfoLabel = QtWidgets.QLabel(self.ContextMenu)
-        self.verticalLayout_2.addWidget(self.SeparateByInfoLabel)
+        self.ContextMenuLayout.addWidget(self.SeparateByInfoLabel)
 
         self.PrombtSeparatorFrame = QtWidgets.QFrame(self.ContextMenu)
         self.PrombtSeparatorFrame.setFrameShape(QtWidgets.QFrame.Box)
         self.PrombtSeparatorFrame.setFrameShadow(QtWidgets.QFrame.Plain)
 
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.PrombtSeparatorFrame)
+        self.PrombtSeparatorFrameLayout = QtWidgets.QHBoxLayout(self.PrombtSeparatorFrame)
 
         self.subjectSeparatorLabel = QtWidgets.QLabel(self.PrombtSeparatorFrame)
-        self.horizontalLayout_2.addWidget(self.subjectSeparatorLabel)
+        self.PrombtSeparatorFrameLayout.addWidget(self.subjectSeparatorLabel)
 
         self.subjectSeparatorContent = QtWidgets.QLineEdit(self.PrombtSeparatorFrame)
         if self.config.has_option('DEFAULT', 'Subject_Separator'):
@@ -111,11 +111,10 @@ class Ui_MainWindow(QtWidgets.QWidget):
         else:
             self.subjectSeparatorContent.setText("; ")
         self.subjectSeparatorContent.textChanged.connect(self.updateConfig)
-        self.horizontalLayout_2.addWidget(self.subjectSeparatorContent)
-
+        self.PrombtSeparatorFrameLayout.addWidget(self.subjectSeparatorContent)
 
         self.descriptionSeparatorLabel = QtWidgets.QLabel(self.PrombtSeparatorFrame)
-        self.horizontalLayout_2.addWidget(self.descriptionSeparatorLabel)
+        self.PrombtSeparatorFrameLayout.addWidget(self.descriptionSeparatorLabel)
 
         self.descriptionSeparatorContent = QtWidgets.QLineEdit(self.PrombtSeparatorFrame)
         if self.config.has_option('DEFAULT', 'Description_Separator'):
@@ -123,17 +122,48 @@ class Ui_MainWindow(QtWidgets.QWidget):
         else:
             self.descriptionSeparatorContent.setText(", ")
         self.descriptionSeparatorContent.textChanged.connect(self.updateConfig)
-        self.horizontalLayout_2.addWidget(self.descriptionSeparatorContent)
+        self.PrombtSeparatorFrameLayout.addWidget(self.descriptionSeparatorContent)
 
         # self.horizontalLayout_2.addWidget(self.lineEdit_2)
-        self.verticalLayout_2.addWidget(self.PrombtSeparatorFrame)
-        self.verticalLayout_4.addWidget(self.ContextMenu)
+        self.ContextMenuLayout.addWidget(self.PrombtSeparatorFrame)
+        self.LeftContainerLayout.addWidget(self.ContextMenu)
+
+        # for i in image_element.ImageElement.allImages:
+        #     NEWdimensions = QtCore.QSize(500, 500)
+        #     i.setMinimumSize(NEWdimensions)
+        #     i.setMaximumSize(NEWdimensions)
+
+        self.imageSizeFrame = QtWidgets.QFrame(self.ContextMenu)
+        self.imageSizeFrame.setFrameShape(QtWidgets.QFrame.Box)
+        self.imageSizeFrame.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.ContextMenuLayout.addWidget(self.imageSizeFrame)
+
+        self.imageSizeFrameLayout = QtWidgets.QHBoxLayout(self.imageSizeFrame)
+        self.ImageSizeLabel = QtWidgets.QLabel(self.imageSizeFrame)
+        self.ImageSizeLabel.setText("Image Dimensions : ")
+        self.imageSizeFrameLayout.addWidget(self.ImageSizeLabel)
+        self.ContextMenuLayout.addWidget(self.imageSizeFrame)
+
+        self.ImageSizeContent = QtWidgets.QDoubleSpinBox(self.imageSizeFrame);
+        self.ImageSizeContent.setRange(0.5, 5)
+        self.ImageSizeContent.setDecimals(1);
+        self.ImageSizeContent.setSingleStep(0.1);
+        self.imageSizeFrameLayout.addWidget(self.ImageSizeContent)
+        self.ImageSizeContent.valueChanged.connect(self.changeImageDimension)
+
+        if self.config.has_option('DEFAULT', 'Image_Size'):
+            self.ImageSizeContent.setValue(self.config.getfloat('DEFAULT', 'Image_Size'))
+        else:
+            self.ImageSizeContent.setValue(1)
+        self.ImageSizeContent.valueChanged.connect(self.updateConfig)
+
+
         spacerItem = QtWidgets.QSpacerItem(40, 70, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
-        self.verticalLayout_4.addItem(spacerItem)
+        self.LeftContainerLayout.addItem(spacerItem)
 
         self.promptSearchBar = QtWidgets.QLineEdit(self.LeftContainer)
         self.promptSearchBar.setPlaceholderText("Search Prompts or descriptions..")
-        self.verticalLayout_4.addWidget(self.promptSearchBar)
+        self.LeftContainerLayout.addWidget(self.promptSearchBar)
         self.promptSearchBar.textChanged.connect(self.filterPromptBySearch)
         controlF = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+F"), self.centralwidget)
         controlF.activated.connect(lambda : self.promptSearchBar.setFocus())
@@ -148,7 +178,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.NameScrollAreaLayout.setContentsMargins(0, 9, 9, 0)
         self.NameContainer.setWidget(self.NameScrollAreaContent)
 
-        self.verticalLayout_4.addWidget(self.NameContainer)
+        self.LeftContainerLayout.addWidget(self.NameContainer)
 
 
         a = prompt_element.PromptElement(mainFrame=self)
@@ -218,6 +248,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.config["DEFAULT"]["Randomize_Order"] = str(self.RandomizePromptOrderCheckbox.isChecked())
         self.config["DEFAULT"]["Subject_Separator"] = f'"{self.subjectSeparatorContent.text()}"'
         self.config["DEFAULT"]["Description_Separator"] = f'"{self.descriptionSeparatorContent.text()}"'
+        self.config["DEFAULT"]["Image_Size"] = str(self.ImageSizeContent.value())
 
         with open(self.configPath, 'w') as configfile:  # save
             self.config.write(configfile)
@@ -258,6 +289,10 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 prompt_element.PromptElement.currentSelected = None
             self.lineEdit.setText(filepath)
             self.importImage(filepath)
+
+    def changeImageDimension(self):
+        for imageWidget in image_element.ImageElement.allImages:
+            imageWidget.setNewSize(self.ImageSizeContent.value())
 
     def importImage(self, folder_path):
         # Reset all static lists & all Widgets showed

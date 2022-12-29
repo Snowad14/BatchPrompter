@@ -2,7 +2,7 @@
 
 `BatchPrompter is a tool to make easy captioning of images under a good pyqt GUI.`
 
-![Screenshots](https://i.imgur.com/SkuKd11.jpg)
+![Screenshots](https://i.imgur.com/1rFfNa7.png)
 
 ## ⌨️ ShortCut
 | ShortCut                                          |              Effect               |

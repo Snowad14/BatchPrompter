@@ -26,8 +26,7 @@ class ImageElement(QtWidgets.QWidget):
             self.dimensions = QtCore.QSize(200, 200)
         else:
             self.dimensions = QtCore.QSize(300, 200)
-        self.setMinimumSize(self.dimensions)
-        self.setMaximumSize(self.dimensions)
+        self.setNewSize(self.mainFrame.ImageSizeContent.value())
         self.layout = QtWidgets.QVBoxLayout(self)
         self.Image = QtWidgets.QLabel(self)
         self.Image.setPixmap(QtGui.QPixmap(image).scaled(self.dimensions.width() * 2, self.dimensions.height() * 2))
@@ -43,6 +42,10 @@ class ImageElement(QtWidgets.QWidget):
     @staticmethod
     def getSelectedImages():
         return [img for img in ImageElement.allImages if img.isSelected]
+
+    def setNewSize(self, offset):
+        self.setMinimumSize(int(self.dimensions.width() * offset),int(self.dimensions.height() * offset))
+        self.setMaximumSize(int(self.dimensions.width() * offset), int(self.dimensions.height() * offset))
 
     def updateCaption(self):
         name = self._dict2Caption()

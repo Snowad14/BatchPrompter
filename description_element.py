@@ -19,7 +19,7 @@ class DescriptionElement(QtWidgets.QWidget):
         self.horizontalSpacer = QtWidgets.QSpacerItem(40, 20)
         self.layout.addItem(self.horizontalSpacer)
 
-        self.entry = utils.clickableQLineEdit(self)
+        self.entry = utils.clickableQLineEdit(self, self.promptParent.parentFrame.menu)
         self.entry.setMinimumSize(QtCore.QSize(200, 35))
 
         self.deleteButton = QtWidgets.QPushButton(self)

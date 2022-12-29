@@ -20,9 +20,17 @@ def sendConfirmMessage(message : str):
 class clickableQLineEdit(QtWidgets.QLineEdit):
     clicked = QtCore.pyqtSignal()
 
-    def __init__(self, widget):
+    def __init__(self, widget, customMenu : QtWidgets.QMenu):
+        self.menu = customMenu
         super().__init__(widget)
 
-    def mousePressEvent(self, QMouseEvent):
-        self.clicked.emit()
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.LeftButton:
+            self.clicked.emit()
+
+    def contextMenuEvent(self, event):
+        self.menu.popup(event.globalPos())
+
+
+
 
