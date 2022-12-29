@@ -42,7 +42,6 @@ class QPromptLine(QtWidgets.QLineEdit):
 
             elif prompt_element.PromptElement.currentSelected and action == applySelectedPromptsAction:
                 for imageWidget in image_element.ImageElement.allImages:
-                    # Retrieves the main prompt even if the function is run in a DescriptionElement or a PromptElement
                     desc = [i for i in prompt_element.PromptElement.currentSelected.getNonEmptyDescriptions() if i in description_element.DescriptionElement.selectedDescriptions]
                     if prompt_element.PromptElement.currentSelected not in imageWidget.usedDict.keys():
                         imageWidget.usedDict[prompt_element.PromptElement.currentSelected] = desc

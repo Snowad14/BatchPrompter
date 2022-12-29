@@ -7,7 +7,7 @@ import utils
 from flowlayout import FlowLayout
 import prompt_element, image_element
 
-#os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 VERSION = "1.0.6"
 
 class CustomContainer(QtWidgets.QScrollArea):
