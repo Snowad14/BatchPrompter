@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import itertools, glob, os
 
 from main import Ui_MainWindow
-import utils, image_element, description_element
+import utils, image_element, description_element, QPromptLine
 
 class PromptContainer(QtWidgets.QFrame):
 
@@ -15,16 +15,6 @@ class PromptContainer(QtWidgets.QFrame):
         self.setContentsMargins(0, 0, 0, 1)
         self.setAcceptDrops(True)
 
-        self.menu = QtWidgets.QMenu(self)
-        action1 = QtWidgets.QAction("Action 1", self)
-        action2 = QtWidgets.QAction("Action 2", self)
-        self.menu.addAction(action1)
-        self.menu.addAction(action2)
-
-        # Affectation du menu contextuel au widget
-        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.customContextMenuRequested.connect(self.showContextMenu)
-
     def dragEnterEvent(self, e):
         e.accept()
 
@@ -33,9 +23,6 @@ class PromptContainer(QtWidgets.QFrame):
 
     def dropEvent(self, e):
         e.accept()
-
-    def showContextMenu(self, pos):
-        self.menu.popup(self.mapToGlobal(pos))
 
 class PromptElement(QtWidgets.QWidget):
 
@@ -53,6 +40,7 @@ class PromptElement(QtWidgets.QWidget):
         PromptElement.allPrompts.append(self)
         self.descriptions = []
         self.isCollapsed = False
+        self.isEditing = False
 
         super(PromptElement, self).__init__(self.parentFrame)
 
@@ -75,7 +63,7 @@ class PromptElement(QtWidgets.QWidget):
         self.collapseButton.setIcon(collapseIcon)
         self.collapseButton.setStyleSheet("background: transparent;")
 
-        self.entry = utils.clickableQLineEdit(self, self.parentFrame.menu)
+        self.entry = QPromptLine.QPromptLine(self)
         self.entry.setMinimumSize(QtCore.QSize(150, 35))
 
         self.addButton = QtWidgets.QPushButton(self)
@@ -156,12 +144,20 @@ class PromptElement(QtWidgets.QWidget):
             return False
         return True
 
+    def updateAllChildImages(self): # for when editing element
+        for imageWidget in image_element.ImageElement.allImages:
+            if self in imageWidget.usedDict.keys():
+                imageWidget.updateCaption()
+
     def duplicate_element(self):
         if self.entry.text() and self.isUniqueElement():
             self.entry.setReadOnly(True)
-            new = PromptElement(self.mainFrame)
-            new.entry.setFocus()
-            self.addButton.setEnabled(True)
+            self.updateAllChildImages()
+            if not self.isEditing:
+                new = PromptElement(self.mainFrame)
+                new.entry.setFocus()
+                self.addButton.setEnabled(True)
+            self.isEditing = False
 
     def delete_element(self):
         concernedImg = [img for img in image_element.ImageElement.allImages if self in img.usedDict.keys()]

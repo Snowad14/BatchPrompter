@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import itertools, glob, os, uuid, imagesize
 
 # Local Import
-import image_element, prompt_element, utils
+import image_element, prompt_element, QPromptLine
 
 class DescriptionElement(QtWidgets.QWidget):
 
@@ -12,6 +12,8 @@ class DescriptionElement(QtWidgets.QWidget):
         self.promptParent = promptParent
         self.mainFrame = mainFrame
         self.parentLayout = self.promptParent.parentFrameLayout
+        self.parentFrame = self.promptParent.parentFrame
+        self.isEditing = False
         super(DescriptionElement, self).__init__()
 
         self.layout = QtWidgets.QHBoxLayout(self)
@@ -19,7 +21,7 @@ class DescriptionElement(QtWidgets.QWidget):
         self.horizontalSpacer = QtWidgets.QSpacerItem(40, 20)
         self.layout.addItem(self.horizontalSpacer)
 
-        self.entry = utils.clickableQLineEdit(self, self.promptParent.parentFrame.menu)
+        self.entry = QPromptLine.QPromptLine(self)
         self.entry.setMinimumSize(QtCore.QSize(200, 35))
 
         self.deleteButton = QtWidgets.QPushButton(self)
@@ -49,11 +51,20 @@ class DescriptionElement(QtWidgets.QWidget):
             return False
         return True
 
+    def updateAllChildImages(self): # TODO: Use a class whose description element and prompt element go to avoid these repetitions
+        for imageWidget in image_element.ImageElement.allImages:
+            if self.promptParent in imageWidget.usedDict.keys():  # Not mandatory but allows to go a little bit faster
+                if self in imageWidget.usedDict[self.promptParent]:
+                    imageWidget.updateCaption()
+
     def duplicate_element(self):
         if self.entry.text() and self.isUniqueElement():
             self.entry.setReadOnly(True)
-            new = DescriptionElement(self.promptParent, self.mainFrame)
-            new.entry.setFocus()
+            self.updateAllChildImages()
+            if not self.isEditing:
+                new = DescriptionElement(self.promptParent, self.mainFrame)
+                new.entry.setFocus()
+            self.isEditing = False
 
     def delete_element(self):
         self.close()

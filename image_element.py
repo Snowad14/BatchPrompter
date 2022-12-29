@@ -47,9 +47,14 @@ class ImageElement(QtWidgets.QWidget):
         self.setMinimumSize(int(self.dimensions.width() * offset),int(self.dimensions.height() * offset))
         self.setMaximumSize(int(self.dimensions.width() * offset), int(self.dimensions.height() * offset))
 
+    def updateVisual(self):
+        if prompt_element.PromptElement.currentSelected in self.usedDict.keys():
+            self.select()
+
     def updateCaption(self):
         name = self._dict2Caption()
         self.caption.setText(name)
+        self.updateVisual()
         self.saveImageToCaption()
 
     def readCaption(self):
@@ -146,6 +151,7 @@ class ImageElement(QtWidgets.QWidget):
 
         # Create all the Differents prompts & descriptions that will be show in the menu
         # I did not find how to make a Qmenu clickable, if someone knows how to do it please contact me
+        # TODO : Use more getNonEmptyDescriptions() and not use if description.entry.text() == ""
         for prompt in prompt_element.PromptElement.allPrompts:
             if prompt.entry.text():
                 if self.usedDict.get(prompt) != None:
