@@ -17,7 +17,7 @@ class QPromptLine(QtWidgets.QLineEdit):
     def contextMenuEvent(self, event):
         if self.widget.entry.text():
             menu = QtWidgets.QMenu(self)
-
+            menu.setStyleSheet("background-color: rgb(112, 112, 112)")
             editPromptAction = QtWidgets.QAction("Edit prompt", self)
             applyMainPromptAction = QtWidgets.QAction(f"""Apply "{self.widget.parentFrame.prompt.entry.text()}" to all images""", self)
             menu.addAction(editPromptAction)
