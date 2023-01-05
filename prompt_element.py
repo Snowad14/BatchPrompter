@@ -10,6 +10,7 @@ class PromptContainer(QtWidgets.QFrame):
         self.parent = parent
         self.prompt = prompt
         super(PromptContainer, self).__init__(self.parent)
+        self.layout = QtWidgets.QVBoxLayout(self)
         self.setFrameShape(QtWidgets.QFrame.Box)
         self.setFrameShadow(QtWidgets.QFrame.Plain)
         self.setContentsMargins(0, 0, 0, 1)
@@ -40,7 +41,7 @@ class PromptElement(QtWidgets.QWidget):
         self.parent = mainFrame.NameScrollAreaContent
         self.parentLayout = mainFrame.NameScrollAreaLayout
         self.parentFrame = PromptContainer(self.parent, self)
-        self.parentFrameLayout = QtWidgets.QVBoxLayout(self.parentFrame)
+        self.parentFrameLayout = self.parentFrame.layout
         self.id = next(PromptElement.idGenerator)
         PromptElement.allPrompts.append(self)
         self.descriptions = []

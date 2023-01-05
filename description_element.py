@@ -17,6 +17,7 @@ class DescriptionElement(QtWidgets.QWidget):
         super(DescriptionElement, self).__init__()
 
         self.layout = QtWidgets.QHBoxLayout(self)
+        self.layout.setContentsMargins(0, 5, 0, 0)
 
         self.horizontalSpacer = QtWidgets.QSpacerItem(40, 20)
         self.layout.addItem(self.horizontalSpacer)
