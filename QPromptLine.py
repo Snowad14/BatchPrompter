@@ -19,9 +19,12 @@ class QPromptLine(QtWidgets.QLineEdit):
             menu = QtWidgets.QMenu(self)
             menu.setStyleSheet("background-color: rgb(112, 112, 112)")
             editPromptAction = QtWidgets.QAction("Edit prompt", self)
-            applyMainPromptAction = QtWidgets.QAction(f"""Apply "{self.widget.parentFrame.prompt.entry.text()}" to all images""", self)
+            if type(self.widget) == prompt_element.PromptElement:
+                applyPromptAction = QtWidgets.QAction(f"""Apply "{self.widget.parentFrame.prompt.entry.text()}" to all images""", self)
+            else:
+                applyPromptAction = QtWidgets.QAction(f"""Apply "{self.widget.entry.text()}" description on all "{self.widget.parentFrame.prompt.entry.text()}" prompted images""", self)
             menu.addAction(editPromptAction)
-            menu.addAction(applyMainPromptAction)
+            menu.addAction(applyPromptAction)
 
             if prompt_element.PromptElement.currentSelected:
                 applySelectedPromptsAction = QtWidgets.QAction(f"Apply selected prompts to all images", self)
@@ -33,11 +36,16 @@ class QPromptLine(QtWidgets.QLineEdit):
                 self.widget.entry.setReadOnly(False)
                 self.widget.isEditing = True
 
-            elif action == applyMainPromptAction:
+            elif action == applyPromptAction:
                 for imageWidget in image_element.ImageElement.allImages:
-                    # Retrieves the main prompt even if the function is run in a DescriptionElement or a PromptElement
-                    if self.widget.parentFrame.prompt not in imageWidget.usedDict.keys() and not imageWidget.isHidden():
-                        imageWidget.usedDict[self.widget.parentFrame.prompt] = []
+                    if self.widget.parentFrame.prompt in imageWidget.usedDict.keys():
+                        if type(self.widget) == prompt_element.PromptElement:
+                            if self.widget.parentFrame.prompt not in imageWidget.usedDict.keys() and not imageWidget.isHidden():
+                                imageWidget.usedDict[self.widget.parentFrame.prompt] = []
+                        else:
+                            if not self.widget in imageWidget.usedDict[self.widget.parentFrame.prompt]:
+                                imageWidget.usedDict[self.widget.parentFrame.prompt].append(self.widget)
+
                         imageWidget.updateCaption()
 
             elif prompt_element.PromptElement.currentSelected and action == applySelectedPromptsAction:

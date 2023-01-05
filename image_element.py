@@ -105,8 +105,6 @@ class ImageElement(QtWidgets.QWidget):
         o.initFrom(self)
         p = QtGui.QPainter(self)
         self.style().drawPrimitive(QtWidgets.QStyle.PrimitiveElement.PE_Widget, o, p, self)
-        # p.end()
-        # del p
 
     def select(self):
         self.setStyleSheet("background-color: rgb(255, 69, 69)")
@@ -117,28 +115,36 @@ class ImageElement(QtWidgets.QWidget):
         self.setStyleSheet("")
 
     def _removeAllElements(self):
-        self.usedDict[prompt_element.PromptElement.currentSelected] = description_element.DescriptionElement.selectedDescriptions
         del self.usedDict[prompt_element.PromptElement.currentSelected]
 
     def _addSelectedElements(self):
-        self.usedDict[prompt_element.PromptElement.currentSelected] = [*description_element.DescriptionElement.selectedDescriptions]
+        if not self.usedDict.get(prompt_element.PromptElement.currentSelected):
+            self.usedDict[prompt_element.PromptElement.currentSelected] = []
+            self.select()
+        for selectedDesc in description_element.DescriptionElement.selectedDescriptions:
+            if selectedDesc not in self.usedDict[prompt_element.PromptElement.currentSelected]:
+                self.usedDict[prompt_element.PromptElement.currentSelected].append(selectedDesc)
 
     def mousePressEvent(self, QMouseEvent):
         if QMouseEvent.buttons() == QtCore.Qt.MouseButton.LeftButton:
             if prompt_element.PromptElement.currentSelected: # make sur user has selected a prombt
-                # Check if prompt has change and update or deselect image depending on whether the image already had all the prompts
-                if self.isSelected and self.usedDict.get(prompt_element.PromptElement.currentSelected) != description_element.DescriptionElement.selectedDescriptions:
-                    self._removeAllElements()
+
+                if self.mainFrame.addOnlyModeCheckbox.isChecked():
                     self._addSelectedElements()
-                elif self.isSelected:
-                    self.deselect()
-                    self._removeAllElements()
                 else:
-                    self.select()
-                    self._addSelectedElements()
+                # Check if prompt has change and update or deselect image depending on whether the image already had all the prompts
+                    if self.isSelected and self.usedDict.get(prompt_element.PromptElement.currentSelected) != description_element.DescriptionElement.selectedDescriptions:
+                        self._removeAllElements()
+                        self._addSelectedElements()
+                    elif self.isSelected:
+                        self.deselect()
+                        self._removeAllElements()
+                    else:
+                        self.select()
+                        self._addSelectedElements()
 
                 self.updateCaption()
-                print(self.usedDict)
+
             else:
                 utils.sendErrorMessage("You must selected a Prompt")
 

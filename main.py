@@ -8,7 +8,7 @@ from flowlayout import FlowLayout
 import prompt_element, image_element
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 
 class CustomContainer(QtWidgets.QScrollArea):
 
@@ -99,6 +99,11 @@ class Ui_MainWindow(QtWidgets.QWidget):
         if self.config.has_option('DEFAULT', 'Randomize_Order'): self.RandomizePromptOrderCheckbox.setChecked(self.config.getboolean('DEFAULT', 'Randomize_Order'))
         self.RandomizePromptOrderCheckbox.stateChanged.connect(self.updateConfig)
         self.ContextMenuLayout.addWidget(self.RandomizePromptOrderCheckbox)
+
+        self.addOnlyModeCheckbox = QtWidgets.QCheckBox(self.ContextMenu)
+        if self.config.has_option('DEFAULT', 'Add_Only_Mode'): self.addOnlyModeCheckbox.setChecked(self.config.getboolean('DEFAULT', 'Add_Only_Mode'))
+        self.addOnlyModeCheckbox.stateChanged.connect(self.updateConfig)
+        self.ContextMenuLayout.addWidget(self.addOnlyModeCheckbox)
 
         self.SeparateByInfoLabel = QtWidgets.QLabel(self.ContextMenu)
         self.ContextMenuLayout.addWidget(self.SeparateByInfoLabel)
@@ -252,9 +257,11 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.config["DEFAULT"]["Include_Subfolder"] = str(self.SubfolderCheckbox.isChecked())
         self.config["DEFAULT"]["Txt_Caption"] = str(self.TxtCaptionCheckbox.isChecked())
         self.config["DEFAULT"]["Randomize_Order"] = str(self.RandomizePromptOrderCheckbox.isChecked())
+        self.config["DEFAULT"]["Add_Only_Mode"] = str(self.addOnlyModeCheckbox.isChecked())
         self.config["DEFAULT"]["Subject_Separator"] = f'"{self.subjectSeparatorContent.text()}"'
         self.config["DEFAULT"]["Description_Separator"] = f'"{self.descriptionSeparatorContent.text()}"'
         self.config["DEFAULT"]["Image_Size"] = str(self.ImageSizeContent.value())
+
 
         with open(self.configPath, 'w') as configfile:  # save
             self.config.write(configfile)
@@ -384,6 +391,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.SubfolderCheckbox.setText("Include Subfolders")
         self.TxtCaptionCheckbox.setText("Txt Caption")
         self.RandomizePromptOrderCheckbox.setText("Randomize prompt order")
+        self.addOnlyModeCheckbox.setText("Add-Only Mode")
         self.SeparateByInfoLabel.setText("Separate with :")
         self.subjectSeparatorLabel.setText("Subject :")
         self.descriptionSeparatorLabel.setText("Description :")
