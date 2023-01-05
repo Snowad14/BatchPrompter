@@ -15,14 +15,19 @@ class PromptContainer(QtWidgets.QFrame):
         self.setContentsMargins(0, 0, 0, 1)
         self.setAcceptDrops(True)
 
-    def dragEnterEvent(self, e):
-        e.accept()
+    def mouseMoveEvent(self, e):
 
-    def dragMoveEvent(self, e):
-        e.accept()
+        if e.buttons() == QtCore.Qt.LeftButton:
+            drag = QtGui.QDrag(self)
+            mime = QtCore.QMimeData()
+            drag.setMimeData(mime)
 
-    def dropEvent(self, e):
-        e.accept()
+            pixmap = QtGui.QPixmap(self.size())
+            self.render(pixmap)
+            drag.setPixmap(pixmap)
+
+            drag.exec_(QtCore.Qt.MoveAction)
+
 
 class PromptElement(QtWidgets.QWidget):
 

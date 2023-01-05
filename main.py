@@ -8,7 +8,7 @@ from flowlayout import FlowLayout
 import prompt_element, image_element
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "1.0.8"
+VERSION = "1.1.0"
 
 class CustomContainer(QtWidgets.QScrollArea):
 
@@ -23,10 +23,17 @@ class CustomContainer(QtWidgets.QScrollArea):
     def dragEnterEvent(self, e):
         e.accept()
 
-    def dragMoveEvent(self, e):
-        e.accept()
-
     def dropEvent(self, e):
+        self.layout = self.mainFrame.NameScrollAreaLayout
+        pos = e.pos()
+        widget = e.source()
+
+        for n in range(self.layout.count()):
+            w = self.layout.itemAt(n).widget()
+            if pos.y() < w.y() + w.size().height() // 2:
+                self.layout.insertWidget(n-1, widget)
+                break
+
         e.accept()
 
 class Ui_MainWindow(QtWidgets.QWidget):
@@ -157,8 +164,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             self.ImageSizeContent.setValue(1)
         self.ImageSizeContent.valueChanged.connect(self.updateConfig)
 
-
-        spacerItem = QtWidgets.QSpacerItem(40, 70, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
+        spacerItem = QtWidgets.QSpacerItem(40, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.LeftContainerLayout.addItem(spacerItem)
 
         self.promptSearchBar = QtWidgets.QLineEdit(self.LeftContainer)
