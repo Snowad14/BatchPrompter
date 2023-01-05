@@ -85,7 +85,7 @@ class ImageElement(QtWidgets.QWidget):
             random.shuffle(value)
             value.insert(0, key)
             subjectList.append(self.mainFrame.descriptionSeparatorContent.text().join(value))
-        random.shuffle(subjectList)
+        #random.shuffle(subjectList)
         return self.mainFrame.subjectSeparatorContent.text().join(subjectList)
 
     def saveImageToCaption(self):
