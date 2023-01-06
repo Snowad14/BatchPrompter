@@ -84,7 +84,7 @@ class PromptElement(QtWidgets.QWidget):
         self.addButton.setIcon(addIcon)
 
         self.deleteButton = QtWidgets.QPushButton(self)
-        self.deleteButton.setEnabled(True)
+        self.deleteButton.setEnabled(False)
         self.deleteButton.setAutoFillBackground(False)
         self.deleteButton.setStyleSheet("")
         self.deleteButton.setText("")
@@ -157,6 +157,7 @@ class PromptElement(QtWidgets.QWidget):
 
     def duplicate_element(self):
         if self.entry.text() and self.isUniqueElement():
+            self.deleteButton.setEnabled(True)
             self.entry.setReadOnly(True)
             self.updateAllChildImages()
             if not self.isEditing:
