@@ -58,3 +58,5 @@ class QPromptLine(QtWidgets.QLineEdit):
                         imageWidget.usedDict[prompt_element.PromptElement.currentSelected] = [i for i in list(set(imageWidget.usedDict[prompt_element.PromptElement.currentSelected] + desc)) if i]
 
                     imageWidget.updateCaption()
+
+

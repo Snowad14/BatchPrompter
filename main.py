@@ -10,12 +10,12 @@ import prompt_element, image_element
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 VERSION = "1.1.2"
 
-class CustomContainer(QtWidgets.QScrollArea):
+class QDragDropScrollArea(QtWidgets.QScrollArea):
 
     def __init__(self, parent, mainFrame):
         self.mainFrame = mainFrame
         self.parent = parent
-        super(CustomContainer, self).__init__(self.parent)
+        super(QDragDropScrollArea, self).__init__(self.parent)
         self.setWidgetResizable(True)
         self.setAcceptDrops(True)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -41,6 +41,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
     def setupUi(self, MainWindow):
 
         self.config = configparser.ConfigParser()
+        # TODO : make it work for all OS
         self.configPath = os.getenv('APPDATA') + '\\BatchPrompter.cfg'
         self.config.read(self.configPath)
 
@@ -179,7 +180,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         controlF = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+F"), self.centralwidget)
         controlF.activated.connect(lambda : self.promptSearchBar.setFocus())
 
-        self.NameContainer = CustomContainer(self.LeftContainer, self)
+        self.NameContainer = QDragDropScrollArea(self.LeftContainer, self)
         self.vbar = self.NameContainer.verticalScrollBar()
 
         self.NameScrollAreaContent = QtWidgets.QWidget()
@@ -360,6 +361,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 subjectPrompt.entry.setText(subject)
                 subjectPrompt.entry.setReadOnly(True)
                 subjectPrompt.addButton.setEnabled(True)
+                subjectPrompt.deleteButton.setEnabled(True)
                 newdico[subjectPrompt] = []
 
             for desc in dico[subject]:

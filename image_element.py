@@ -106,6 +106,9 @@ class ImageElement(QtWidgets.QWidget):
         p = QtGui.QPainter(self)
         self.style().drawPrimitive(QtWidgets.QStyle.PrimitiveElement.PE_Widget, o, p, self)
 
+    # def applyColor(self):
+    #     if  self.usedDict
+
     def select(self):
         self.setStyleSheet("background-color: rgb(255, 69, 69)")
         self.isSelected = True
