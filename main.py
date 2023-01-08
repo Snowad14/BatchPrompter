@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from natsort import os_sorted
-import os, sys, glob, configparser
+import os, sys, glob, configparser, time, threading
 
 import description_element
 import utils
@@ -8,7 +8,7 @@ from flowlayout import FlowLayout
 import prompt_element, image_element
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "1.1.2"
+VERSION = "1.1.3"
 
 class QDragDropScrollArea(QtWidgets.QScrollArea):
 
@@ -263,7 +263,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.config["DEFAULT"]["Description_Separator"] = f'"{self.descriptionSeparatorContent.text()}"'
         self.config["DEFAULT"]["Image_Size"] = str(self.ImageSizeContent.value())
 
-
         with open(self.configPath, 'w') as configfile:  # save
             self.config.write(configfile)
 
@@ -274,8 +273,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 imageWidget.show()
             else:
                 imageWidget.hide()
-            QtWidgets.QApplication.processEvents()
-
 
     def scrollToBottom(self):
         # bad fixes for auto bottom when new prompt

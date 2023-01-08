@@ -59,7 +59,7 @@ class PromptElement(QtWidgets.QWidget):
         self.collapseButton = QtWidgets.QPushButton(self)
         self.collapseButton.setEnabled(True)
         self.collapseButton.setAutoFillBackground(False)
-        self.collapseButton.setStyleSheet("")
+        self.collapseButton.setStyleSheet("background: transparent;")
         self.collapseButton.setText("")
         self.collapseButton.hide()
 
@@ -67,7 +67,6 @@ class PromptElement(QtWidgets.QWidget):
         pixmap = QtGui.QPixmap("assets/triangle.svg")
         collapseIcon.addPixmap(pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.collapseButton.setIcon(collapseIcon)
-        self.collapseButton.setStyleSheet("background: transparent;")
 
         self.entry = QPromptLine.QPromptLine(self)
         self.entry.setMinimumSize(QtCore.QSize(150, 35))
