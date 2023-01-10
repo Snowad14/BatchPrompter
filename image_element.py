@@ -47,14 +47,14 @@ class ImageElement(QtWidgets.QWidget):
         self.setMinimumSize(int(self.dimensions.width() * offset),int(self.dimensions.height() * offset))
         self.setMaximumSize(int(self.dimensions.width() * offset), int(self.dimensions.height() * offset))
 
-    def updateVisual(self):
+    def _updateVisual(self):
         if prompt_element.PromptElement.currentSelected in self.usedDict.keys():
             self.select()
 
     def updateCaption(self):
         name = self._dict2Caption()
         self.caption.setText(name)
-        self.updateVisual()
+        self._updateVisual()
         self.saveImageToCaption()
 
     def readCaption(self):
@@ -107,15 +107,16 @@ class ImageElement(QtWidgets.QWidget):
         self.style().drawPrimitive(QtWidgets.QStyle.PrimitiveElement.PE_Widget, o, p, self)
 
     def hasSelectedDescriptions(self):
+        if not description_element.DescriptionElement.selectedDescriptions:
+            return False
         for desc in description_element.DescriptionElement.selectedDescriptions:
-            if self.usedDict.get(prompt_element.PromptElement.currentSelected):
+            if self.usedDict.get(prompt_element.PromptElement.currentSelected) is not None:
                 if desc not in self.usedDict[prompt_element.PromptElement.currentSelected]:
                     return False
         return True
 
     def updateBackground(self):
         if self.isSelected:
-            print(self.hasSelectedDescriptions())
             if self.hasSelectedDescriptions():
                 self.setStyleSheet("background-color: rgb(3, 248, 252)")
             else:
@@ -174,16 +175,15 @@ class ImageElement(QtWidgets.QWidget):
 
         # Create all the Differents prompts & descriptions that will be show in the menu
         # I did not find how to make a Qmenu clickable, if someone knows how to do it please contact me
-        # TODO : Use more getNonEmptyDescriptions() and not use if description.entry.text() == ""
         for prompt in prompt_element.PromptElement.allPrompts:
             if prompt.entry.text():
                 if self.usedDict.get(prompt) != None:
                     removePromptsMenu.addAction(prompt.entry.text())
                     if not len(prompt.descriptions) == len(self.usedDict[prompt]) and self.usedDict[prompt] != prompt.getNonEmptyDescriptions():
                         promptAddMenu = addPromptsMenu.addMenu(prompt.entry.text())
-                        for description in prompt.descriptions:
+                        for description in prompt.getNonEmptyDescriptions():
                             if description not in self.usedDict[prompt]:
-                               if description.entry.text() != "": promptAddMenu.addAction(description.entry.text())
+                               promptAddMenu.addAction(description.entry.text())
                     if self.usedDict.get(prompt) != []:
                         promptRemoveMenu = removePromptsMenu.addMenu(prompt.entry.text())
                         for descriptions in prompt.descriptions:
@@ -193,8 +193,8 @@ class ImageElement(QtWidgets.QWidget):
                     addPromptsMenu.addAction(prompt.entry.text())
                     if prompt.getNonEmptyDescriptions():
                         promptAddMenu = addPromptsMenu.addMenu(prompt.entry.text())
-                        for desc in prompt.descriptions:
-                            if desc.entry.text() != "": promptAddMenu.addAction(desc.entry.text())
+                        for desc in prompt.getNonEmptyDescriptions():
+                            promptAddMenu.addAction(desc.entry.text())
 
         action = contextMenu.exec_(self.mapToGlobal(event.pos()))
 
