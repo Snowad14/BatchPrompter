@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from natsort import os_sorted
-import os, sys, glob, configparser, time, threading
+import os, sys, glob, configparser
 
 import description_element
 import utils
@@ -8,7 +8,7 @@ from flowlayout import FlowLayout
 import prompt_element, image_element
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "1.1.3"
+VERSION = "1.1.4"
 
 class QDragDropScrollArea(QtWidgets.QScrollArea):
 
@@ -88,6 +88,10 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.SubfolderCheckbox.stateChanged.connect(self.updateConfig)
         self.ContextMenuLayout.addWidget(self.SubfolderCheckbox)
 
+        # self.openConfigMenuButton = QtWidgets.QPushButton("Open Config Menu", self)
+        # self.openConfigMenuButton.clicked.connect(self.showConfigMenu)
+        # self.ContextMenuLayout.addWidget(self.openConfigMenuButton)
+
         self.TxtCaptionCheckbox = QtWidgets.QCheckBox(self.ContextMenu)
         if self.config.has_option('DEFAULT', 'Txt_Caption'):
             self.TxtCaptionCheckbox.setChecked(self.config.getboolean('DEFAULT', 'Txt_Caption'))
@@ -140,11 +144,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
         # self.horizontalLayout_2.addWidget(self.lineEdit_2)
         self.ContextMenuLayout.addWidget(self.PrombtSeparatorFrame)
         self.LeftContainerLayout.addWidget(self.ContextMenu)
-
-        # for i in image_element.ImageElement.allImages:
-        #     NEWdimensions = QtCore.QSize(500, 500)
-        #     i.setMinimumSize(NEWdimensions)
-        #     i.setMaximumSize(NEWdimensions)
 
         self.imageSizeFrame = QtWidgets.QFrame(self.ContextMenu)
         self.imageSizeFrame.setFrameShape(QtWidgets.QFrame.Box)
@@ -219,13 +218,17 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.RightContainerBottomSpacer = QtWidgets.QSpacerItem(200, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.RightContainerBottomLayout.addItem(self.RightContainerBottomSpacer)
 
+        self.RightContainerBottomSearchBarCountLabel = QtWidgets.QLabel(self.RightContainerBottomFrame)
+
+
         self.RightContainerBottomSearchBar = QtWidgets.QLineEdit(self.RightContainerBottomFrame)
         self.RightContainerBottomSearchBar.setPlaceholderText("Search text in images captions..")
-        self.RightContainerBottomSearchBar.textChanged.connect(self.filderImageBySearch)
+        self.RightContainerBottomSearchBar.textChanged.connect(self.filterImageBySearch)
         controlI = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+I"), self.centralwidget)
         controlI.activated.connect(lambda : self.RightContainerBottomSearchBar.setFocus())
 
         self.RightContainerBottomLayout.addItem(self.RightContainerBottomSpacer)
+        self.RightContainerBottomLayout.addWidget(self.RightContainerBottomSearchBarCountLabel)
         self.RightContainerBottomLayout.addWidget(self.RightContainerBottomSearchBar)
 
         self.ImageContainer = QtWidgets.QScrollArea(self.RightContainerFrame)
@@ -266,13 +269,20 @@ class Ui_MainWindow(QtWidgets.QWidget):
         with open(self.configPath, 'w') as configfile:  # save
             self.config.write(configfile)
 
-    def filderImageBySearch(self):
+    def filterImageBySearch(self):
         text = self.RightContainerBottomSearchBar.text()
+        reverse = False if len(text) <= 0 or text[0] != "-" else True
+        if reverse:
+            text = text[1:]
+            if not text: return
+
         for imageWidget in image_element.ImageElement.allImages:
             if text.lower() in imageWidget.caption.text().lower():
-                imageWidget.show()
+                imageWidget.hide() if reverse else imageWidget.show()
             else:
-                imageWidget.hide()
+                imageWidget.show() if reverse else imageWidget.hide()
+        count = len([img for img in image_element.ImageElement.allImages if not img.isHidden()])
+        self.RightContainerBottomSearchBarCountLabel.setText(str(count))
 
     def scrollToBottom(self):
         # bad fixes for auto bottom when new prompt
@@ -320,7 +330,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 if name.endswith(('.jpg', '.png')):
                     choosedImgs.append((os.path.join(root, name), name))
             if not self.SubfolderCheckbox.isChecked(): break
-
+        self.RightContainerBottomSearchBarCountLabel.setText(str(len(choosedImgs)))
         progressBar = QtWidgets.QProgressBar()
         progressBar.setRange(0, len(choosedImgs))
         self.horizontalLayout_4.addWidget(progressBar)

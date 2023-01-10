@@ -106,16 +106,30 @@ class ImageElement(QtWidgets.QWidget):
         p = QtGui.QPainter(self)
         self.style().drawPrimitive(QtWidgets.QStyle.PrimitiveElement.PE_Widget, o, p, self)
 
-    # def applyColor(self):
-    #     if  self.usedDict
+    def hasSelectedDescriptions(self):
+        for desc in description_element.DescriptionElement.selectedDescriptions:
+            if self.usedDict.get(prompt_element.PromptElement.currentSelected):
+                if desc not in self.usedDict[prompt_element.PromptElement.currentSelected]:
+                    return False
+        return True
+
+    def updateBackground(self):
+        if self.isSelected:
+            print(self.hasSelectedDescriptions())
+            if self.hasSelectedDescriptions():
+                self.setStyleSheet("background-color: rgb(3, 248, 252)")
+            else:
+                self.setStyleSheet("background-color: rgb(255, 69, 69)")
+        else:
+            self.setStyleSheet("")
 
     def select(self):
-        self.setStyleSheet("background-color: rgb(255, 69, 69)")
         self.isSelected = True
+        self.updateBackground()
 
     def deselect(self):
         self.isSelected = False
-        self.setStyleSheet("")
+        self.updateBackground()
 
     def _removeAllElements(self):
         del self.usedDict[prompt_element.PromptElement.currentSelected]

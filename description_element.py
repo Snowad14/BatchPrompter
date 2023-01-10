@@ -101,4 +101,7 @@ class DescriptionElement(QtWidgets.QWidget):
                 self.promptParent.select()
                 self.select()
 
+            for img in image_element.ImageElement.allImages:
+                img.updateBackground()
+
 
