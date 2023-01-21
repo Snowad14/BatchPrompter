@@ -26,7 +26,7 @@ class ImageElement(QtWidgets.QWidget):
             self.dimensions = QtCore.QSize(200, 200)
         else:
             self.dimensions = QtCore.QSize(300, 200)
-        self.setNewSize(self.mainFrame.ImageSizeContent.value())
+        self.setNewSize(self.mainFrame.configMenu.ImageSizeContent.value())
         self.layout = QtWidgets.QVBoxLayout(self)
         self.Image = QtWidgets.QLabel(self)
         self.Image.setPixmap(QtGui.QPixmap(image).scaled(self.dimensions.width() * 2, self.dimensions.height() * 2))
@@ -58,7 +58,7 @@ class ImageElement(QtWidgets.QWidget):
         self.saveImageToCaption()
 
     def readCaption(self):
-        if self.mainFrame.TxtCaptionCheckbox.isChecked():
+        if self.mainFrame.configMenu.TxtCaptionCheckbox.isChecked():
             onlyName = os.path.splitext(self.path)[0]
             if os.path.exists(onlyName + ".txt"):
                 with open(onlyName + ".txt", "r") as f:
@@ -71,26 +71,26 @@ class ImageElement(QtWidgets.QWidget):
         subjectList = []
         for i in self.usedDict.items():
             a = [element.entry.text() for element in [i[0]] + i[1]] # Get all subject & desc in one list
-            subjectList.append(self.mainFrame.descriptionSeparatorContent.text().join(a))
-        name = self.mainFrame.subjectSeparatorContent.text().join(subjectList)
+            subjectList.append(self.mainFrame.configMenu.descriptionSeparatorContent.text().join(a))
+        name = self.mainFrame.configMenu.subjectSeparatorContent.text().join(subjectList)
         return name
 
-    def _getRandomPromptOrder(self):
+    def _getWritableCaption(self):
         subjectList = []
         for key, value in self.usedDict.items():
             key, value = (key.entry.text(), [i.entry.text() for i in value])
             if not value:
                 subjectList.append(key)
                 continue
-            random.shuffle(value)
+            if self.mainFrame.configMenu.RandomizeChildOrderCheckbox.isChecked(): random.shuffle(value)
             value.insert(0, key)
-            subjectList.append(self.mainFrame.descriptionSeparatorContent.text().join(value))
-        #random.shuffle(subjectList)
-        return self.mainFrame.subjectSeparatorContent.text().join(subjectList)
+            subjectList.append(self.mainFrame.configMenu.descriptionSeparatorContent.text().join(value))
+        if self.mainFrame.configMenu.RandomizeParentOrderCheckbox.isChecked(): random.shuffle(subjectList)
+        return self.mainFrame.configMenu.subjectSeparatorContent.text().join(subjectList)
 
     def saveImageToCaption(self):
-        captionString = self._getRandomPromptOrder() if self.mainFrame.RandomizePromptOrderCheckbox.isChecked() else self.caption.text()
-        if self.mainFrame.TxtCaptionCheckbox.isChecked():
+        captionString = self._getWritableCaption()
+        if self.mainFrame.configMenu.TxtCaptionCheckbox.isChecked():
             onlyName = os.path.splitext(self.path)[0]
             with open(onlyName + ".txt", "w") as f:
                 f.write(captionString)
@@ -147,7 +147,7 @@ class ImageElement(QtWidgets.QWidget):
         if QMouseEvent.buttons() == QtCore.Qt.MouseButton.LeftButton:
             if prompt_element.PromptElement.currentSelected: # make sur user has selected a prombt
 
-                if self.mainFrame.addOnlyModeCheckbox.isChecked():
+                if self.mainFrame.configMenu.addOnlyModeCheckbox.isChecked():
                     self._addSelectedElements()
                 else:
                 # Check if prompt has change and update or deselect image depending on whether the image already had all the prompts

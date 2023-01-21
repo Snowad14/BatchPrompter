@@ -1,14 +1,11 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from natsort import os_sorted
 import os, sys, glob, configparser
-
-import description_element
-import utils
 from flowlayout import FlowLayout
-import prompt_element, image_element
+import prompt_element, image_element, description_element, configWindow, utils
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "1.1.5"
+VERSION = "1.2.0"
 
 class QDragDropScrollArea(QtWidgets.QScrollArea):
 
@@ -44,6 +41,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         # TODO : make it work for all OS
         self.configPath = os.getenv('APPDATA') + '\\BatchPrompter.cfg'
         self.config.read(self.configPath)
+        self.configMenu = configWindow.ConfigDialog(self)
 
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1200, 800)
@@ -83,91 +81,11 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.horizontalLayout.addWidget(self.pushButton)
         self.ContextMenuLayout.addWidget(self.FolderBrowserFrame)
 
-        self.SubfolderCheckbox = QtWidgets.QCheckBox(self.ContextMenu)
-        if self.config.has_option('DEFAULT', 'Include_Subfolder'): self.SubfolderCheckbox.setChecked(self.config.getboolean('DEFAULT', 'Include_Subfolder'))
-        self.SubfolderCheckbox.stateChanged.connect(self.updateConfig)
-        self.ContextMenuLayout.addWidget(self.SubfolderCheckbox)
+        self.openConfigMenuButton = QtWidgets.QPushButton("Open Config Menu", self)
+        self.openConfigMenuButton.clicked.connect(lambda: self.configMenu.exec_())
+        self.ContextMenuLayout.addWidget(self.openConfigMenuButton)
 
-        # self.openConfigMenuButton = QtWidgets.QPushButton("Open Config Menu", self)
-        # self.openConfigMenuButton.clicked.connect(self.showConfigMenu)
-        # self.ContextMenuLayout.addWidget(self.openConfigMenuButton)
-
-        self.TxtCaptionCheckbox = QtWidgets.QCheckBox(self.ContextMenu)
-        if self.config.has_option('DEFAULT', 'Txt_Caption'):
-            self.TxtCaptionCheckbox.setChecked(self.config.getboolean('DEFAULT', 'Txt_Caption'))
-        else:
-            self.TxtCaptionCheckbox.setChecked(True)
-        self.TxtCaptionCheckbox.stateChanged.connect(self.updateConfig)
-        self.ContextMenuLayout.addWidget(self.TxtCaptionCheckbox)
-
-        self.RandomizePromptOrderCheckbox = QtWidgets.QCheckBox(self.ContextMenu)
-        if self.config.has_option('DEFAULT', 'Randomize_Order'): self.RandomizePromptOrderCheckbox.setChecked(self.config.getboolean('DEFAULT', 'Randomize_Order'))
-        self.RandomizePromptOrderCheckbox.stateChanged.connect(self.updateConfig)
-        self.ContextMenuLayout.addWidget(self.RandomizePromptOrderCheckbox)
-
-        self.addOnlyModeCheckbox = QtWidgets.QCheckBox(self.ContextMenu)
-        if self.config.has_option('DEFAULT', 'Add_Only_Mode'): self.addOnlyModeCheckbox.setChecked(self.config.getboolean('DEFAULT', 'Add_Only_Mode'))
-        self.addOnlyModeCheckbox.stateChanged.connect(self.updateConfig)
-        self.ContextMenuLayout.addWidget(self.addOnlyModeCheckbox)
-
-        self.SeparateByInfoLabel = QtWidgets.QLabel(self.ContextMenu)
-        self.ContextMenuLayout.addWidget(self.SeparateByInfoLabel)
-
-        self.PrombtSeparatorFrame = QtWidgets.QFrame(self.ContextMenu)
-        self.PrombtSeparatorFrame.setFrameShape(QtWidgets.QFrame.Box)
-        self.PrombtSeparatorFrame.setFrameShadow(QtWidgets.QFrame.Plain)
-
-        self.PrombtSeparatorFrameLayout = QtWidgets.QHBoxLayout(self.PrombtSeparatorFrame)
-
-        self.subjectSeparatorLabel = QtWidgets.QLabel(self.PrombtSeparatorFrame)
-        self.PrombtSeparatorFrameLayout.addWidget(self.subjectSeparatorLabel)
-
-        self.subjectSeparatorContent = QtWidgets.QLineEdit(self.PrombtSeparatorFrame)
-        if self.config.has_option('DEFAULT', 'Subject_Separator'):
-            self.subjectSeparatorContent.setText(self.config.get('DEFAULT', 'Subject_Separator').strip('"'))
-        else:
-            self.subjectSeparatorContent.setText("; ")
-        self.subjectSeparatorContent.textChanged.connect(self.updateConfig)
-        self.PrombtSeparatorFrameLayout.addWidget(self.subjectSeparatorContent)
-
-        self.descriptionSeparatorLabel = QtWidgets.QLabel(self.PrombtSeparatorFrame)
-        self.PrombtSeparatorFrameLayout.addWidget(self.descriptionSeparatorLabel)
-
-        self.descriptionSeparatorContent = QtWidgets.QLineEdit(self.PrombtSeparatorFrame)
-        if self.config.has_option('DEFAULT', 'Description_Separator'):
-            self.descriptionSeparatorContent.setText(self.config.get('DEFAULT', 'Description_Separator').strip('"'))
-        else:
-            self.descriptionSeparatorContent.setText(", ")
-        self.descriptionSeparatorContent.textChanged.connect(self.updateConfig)
-        self.PrombtSeparatorFrameLayout.addWidget(self.descriptionSeparatorContent)
-
-        # self.horizontalLayout_2.addWidget(self.lineEdit_2)
-        self.ContextMenuLayout.addWidget(self.PrombtSeparatorFrame)
         self.LeftContainerLayout.addWidget(self.ContextMenu)
-
-        self.imageSizeFrame = QtWidgets.QFrame(self.ContextMenu)
-        self.imageSizeFrame.setFrameShape(QtWidgets.QFrame.Box)
-        self.imageSizeFrame.setFrameShadow(QtWidgets.QFrame.Plain)
-        self.ContextMenuLayout.addWidget(self.imageSizeFrame)
-
-        self.imageSizeFrameLayout = QtWidgets.QHBoxLayout(self.imageSizeFrame)
-        self.ImageSizeLabel = QtWidgets.QLabel(self.imageSizeFrame)
-        self.ImageSizeLabel.setText("Image Dimensions : ")
-        self.imageSizeFrameLayout.addWidget(self.ImageSizeLabel)
-        self.ContextMenuLayout.addWidget(self.imageSizeFrame)
-
-        self.ImageSizeContent = QtWidgets.QDoubleSpinBox(self.imageSizeFrame);
-        self.ImageSizeContent.setRange(0.5, 5)
-        self.ImageSizeContent.setDecimals(1);
-        self.ImageSizeContent.setSingleStep(0.1);
-        self.imageSizeFrameLayout.addWidget(self.ImageSizeContent)
-        self.ImageSizeContent.valueChanged.connect(self.changeImageDimension)
-
-        if self.config.has_option('DEFAULT', 'Image_Size'):
-            self.ImageSizeContent.setValue(self.config.getfloat('DEFAULT', 'Image_Size'))
-        else:
-            self.ImageSizeContent.setValue(1)
-        self.ImageSizeContent.valueChanged.connect(self.updateConfig)
 
         spacerItem = QtWidgets.QSpacerItem(40, 10, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Fixed)
         self.LeftContainerLayout.addItem(spacerItem)
@@ -225,7 +143,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.RightContainerBottomSearchBar.setPlaceholderText("Search text in images captions..")
         self.RightContainerBottomSearchBar.textChanged.connect(self.filterImageBySearch)
         controlI = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+I"), self.centralwidget)
-        controlI.activated.connect(lambda : self.RightContainerBottomSearchBar.setFocus())
+        controlI.activated.connect(lambda x: self.RightContainerBottomSearchBar.setFocus())
 
         self.RightContainerBottomLayout.addItem(self.RightContainerBottomSpacer)
         self.RightContainerBottomLayout.addWidget(self.RightContainerBottomSearchBarCountLabel)
@@ -258,15 +176,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
     def updateConfig(self):
         self.config["DEFAULT"]["Last_Folder_Path"] = self.lineEdit.text()
-        self.config["DEFAULT"]["Include_Subfolder"] = str(self.SubfolderCheckbox.isChecked())
-        self.config["DEFAULT"]["Txt_Caption"] = str(self.TxtCaptionCheckbox.isChecked())
-        self.config["DEFAULT"]["Randomize_Order"] = str(self.RandomizePromptOrderCheckbox.isChecked())
-        self.config["DEFAULT"]["Add_Only_Mode"] = str(self.addOnlyModeCheckbox.isChecked())
-        self.config["DEFAULT"]["Subject_Separator"] = f'"{self.subjectSeparatorContent.text()}"'
-        self.config["DEFAULT"]["Description_Separator"] = f'"{self.descriptionSeparatorContent.text()}"'
-        self.config["DEFAULT"]["Image_Size"] = str(self.ImageSizeContent.value())
-
-        with open(self.configPath, 'w') as configfile:  # save
+        with open(self.configPath, 'w') as configfile:
             self.config.write(configfile)
 
     def filterImageBySearch(self):
@@ -313,10 +223,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
             self.lineEdit.setText(filepath)
             self.importImage(filepath)
 
-    def changeImageDimension(self):
-        for imageWidget in image_element.ImageElement.allImages:
-            imageWidget.setNewSize(self.ImageSizeContent.value())
-
     def importImage(self, folder_path):
         # Reset all static lists & all Widgets showed
         for image in image_element.ImageElement.allImages:
@@ -329,7 +235,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
             for name in os_sorted(files):
                 if name.endswith(('.jpg', '.png')):
                     choosedImgs.append((os.path.join(root, name), name))
-            if not self.SubfolderCheckbox.isChecked(): break
+            if not self.configMenu.SubfolderCheckbox.isChecked(): break
         self.RightContainerBottomSearchBarCountLabel.setText(str(len(choosedImgs)))
         progressBar = QtWidgets.QProgressBar()
         progressBar.setRange(0, len(choosedImgs))
@@ -349,9 +255,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
         dico = {}
         newdico = {}
         for cap in caption:
-            instanceList = cap.split(self.subjectSeparatorContent.text().strip())
+            instanceList = cap.split(self.configMenu.subjectSeparatorContent.text().strip())
             for instance in instanceList:
-                elements = instance.split(self.descriptionSeparatorContent.text().strip())
+                elements = instance.split(self.configMenu.descriptionSeparatorContent.text().strip())
                 subjectName = elements[0].strip()
                 if subjectName:
                     if not dico.get(subjectName): dico[subjectName] = []
@@ -379,9 +285,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
                     newdico[subjectPrompt].append(descPrompt)
 
         for img in image_element.ImageElement.allImages:
-            instanceList = img.caption.text().split(self.subjectSeparatorContent.text().strip())
+            instanceList = img.caption.text().split(self.configMenu.subjectSeparatorContent.text().strip())
             for instance in instanceList:
-                elements = instance.split(self.descriptionSeparatorContent.text().strip())
+                elements = instance.split(self.configMenu.descriptionSeparatorContent.text().strip())
                 subjectName = elements[0].strip()
                 if subjectName:
                     subjectElement = [subject for subject in newdico.keys() if subject.entry.text() == subjectName][0]
@@ -393,17 +299,19 @@ class Ui_MainWindow(QtWidgets.QWidget):
                                 img.usedDict[subjectElement].append(x)
             img.updateCaption()
 
+
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(f"BatchPrompter V{VERSION}")
         self.label.setText("Folder:")
         self.pushButton.setText("Browse")
-        self.SubfolderCheckbox.setText("Include Subfolders")
-        self.TxtCaptionCheckbox.setText("Txt Caption")
-        self.RandomizePromptOrderCheckbox.setText("Randomize prompt order")
-        self.addOnlyModeCheckbox.setText("Add-Only Mode")
-        self.SeparateByInfoLabel.setText("Separate with :")
-        self.subjectSeparatorLabel.setText("Subject :")
-        self.descriptionSeparatorLabel.setText("Description :")
+        # self.SubfolderCheckbox.setText("Include Subfolders")
+        # self.TxtCaptionCheckbox.setText("Txt Caption")
+        # self.RandomizePromptOrderCheckbox.setText("Randomize prompt order")
+        # self.addOnlyModeCheckbox.setText("Add-Only Mode")
+        # self.SeparateByInfoLabel.setText("Separate with :")
+        # self.subjectSeparatorLabel.setText("Subject :")
+        # self.descriptionSeparatorLabel.setText("Description :")
+
 
 def except_hook(cls, exception, traceback):
     sys.__excepthook__(cls, exception, traceback)
