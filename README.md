@@ -10,6 +10,8 @@
 | Control+F                                         | Select the search bar for prompts |
 | Control+I                                         | Select the search bar for Images  |
 
+🙏 Original idea/design of the program and many feedbacks by Juusoz#6120, many thanks to him
+
 ## 📋 Installation
   ...
 

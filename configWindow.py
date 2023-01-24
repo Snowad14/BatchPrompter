@@ -121,7 +121,6 @@ class ConfigDialog(QtWidgets.QDialog):
             imageWidget.setNewSize(self.ImageSizeContent.value())
 
     def updateConfig(self):
-        #self.config["DEFAULT"]["Last_Folder_Path"] = self.lineEdit.text()
         self.config["DEFAULT"]["Include_Subfolder"] = str(self.SubfolderCheckbox.isChecked())
         self.config["DEFAULT"]["Txt_Caption"] = str(self.TxtCaptionCheckbox.isChecked())
         self.config["DEFAULT"]["Randomize_Parent_Order"] = str(self.RandomizeParentOrderCheckbox.isChecked())

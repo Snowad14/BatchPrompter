@@ -5,7 +5,7 @@ from flowlayout import FlowLayout
 import prompt_element, image_element, description_element, configWindow, utils
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 
 class QDragDropScrollArea(QtWidgets.QScrollArea):
 
