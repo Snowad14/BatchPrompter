@@ -5,7 +5,7 @@ from flowlayout import FlowLayout
 import prompt_element, image_element, description_element, configWindow, utils
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "1.2.1"
+VERSION = "1.2.2"
 
 class QDragDropScrollArea(QtWidgets.QScrollArea):
 
@@ -233,7 +233,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         choosedImgs = []
         for root, dirs, files in os.walk(folder_path):
             for name in os_sorted(files):
-                if name.endswith(('.jpg', '.png')):
+                if name.endswith(('.jpg', '.png', 'webp')):
                     choosedImgs.append((os.path.join(root, name), name))
             if not self.configMenu.SubfolderCheckbox.isChecked(): break
         self.RightContainerBottomSearchBarCountLabel.setText(str(len(choosedImgs)))
