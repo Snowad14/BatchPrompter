@@ -2,10 +2,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from natsort import os_sorted
 import os, sys, glob, configparser
 from flowlayout import FlowLayout
+from platformdirs import *
 import prompt_element, image_element, description_element, configWindow, utils
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "1.2.2"
+VERSION = "1.2.3"
 
 class QDragDropScrollArea(QtWidgets.QScrollArea):
 
@@ -38,8 +39,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
     def setupUi(self, MainWindow):
 
         self.config = configparser.ConfigParser()
-        # TODO : make it work for all OS
-        self.configPath = os.getenv('APPDATA') + '\\BatchPrompter.cfg'
+        self.configPath = user_data_dir(roaming=True) + '\\BatchPrompter.cfg'
         self.config.read(self.configPath)
         self.configMenu = configWindow.ConfigDialog(self)
 
@@ -304,14 +304,6 @@ class Ui_MainWindow(QtWidgets.QWidget):
         MainWindow.setWindowTitle(f"BatchPrompter V{VERSION}")
         self.label.setText("Folder:")
         self.pushButton.setText("Browse")
-        # self.SubfolderCheckbox.setText("Include Subfolders")
-        # self.TxtCaptionCheckbox.setText("Txt Caption")
-        # self.RandomizePromptOrderCheckbox.setText("Randomize prompt order")
-        # self.addOnlyModeCheckbox.setText("Add-Only Mode")
-        # self.SeparateByInfoLabel.setText("Separate with :")
-        # self.subjectSeparatorLabel.setText("Subject :")
-        # self.descriptionSeparatorLabel.setText("Description :")
-
 
 def except_hook(cls, exception, traceback):
     sys.__excepthook__(cls, exception, traceback)
