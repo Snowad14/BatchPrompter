@@ -2,7 +2,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from natsort import os_sorted
 import os, sys, glob, configparser
 
-import description_element
 import utils
 from flowlayout import FlowLayout
 import prompt_element, image_element
@@ -107,6 +106,11 @@ class ConfigDialog(QtWidgets.QDialog):
         self.ImageSizeContent.valueChanged.connect(self.updateConfig)
         self.ImageSizeContent.valueChanged.connect(self.changeImageDimension)
 
+        self.exportPromptsButton = QtWidgets.QPushButton(self)
+        self.exportPromptsButton.clicked.connect(self.exportPrompts)
+        self.layout.addWidget(self.exportPromptsButton)
+
+
         self.SubfolderCheckbox.setText("Include Subfolders")
         self.TxtCaptionCheckbox.setText("Txt Caption")
         self.RandomizeParentOrderCheckbox.setText("Randomize parent prompt order")
@@ -115,10 +119,26 @@ class ConfigDialog(QtWidgets.QDialog):
         self.SeparateByInfoLabel.setText("Separate with :")
         self.subjectSeparatorLabel.setText("Subject :")
         self.descriptionSeparatorLabel.setText("Description :")
+        self.exportPromptsButton.setText("Export Prompts")
 
     def changeImageDimension(self):
         for imageWidget in image_element.ImageElement.allImages:
             imageWidget.setNewSize(self.ImageSizeContent.value())
+
+    def exportPrompts(self):
+        # make user context file menu to choose a txt file to save caption
+        txt_file_path = QtWidgets.QFileDialog.getSaveFileName(self, "Save Caption", "prompts", "Text Files (*.txt)")[0]
+        with open(txt_file_path, "w") as txt_file:
+            for prompt in prompt_element.PromptElement.allPrompts:
+                if prompt.entry.isReadOnly():
+                    txt_file.write(prompt.entry.text() + "\n")
+                    for description in prompt.getNonEmptyDescriptions():
+                        txt_file.write("    " + description.entry.text() + "\n")
+
+        finishDialog = QtWidgets.QMessageBox()
+        finishDialog.setText("Exported Successfully")
+        finishDialog.setWindowTitle("Finished")
+        finishDialog.exec_()
 
     def updateConfig(self):
         self.config["DEFAULT"]["Include_Subfolder"] = str(self.SubfolderCheckbox.isChecked())

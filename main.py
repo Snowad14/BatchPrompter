@@ -6,7 +6,7 @@ from platformdirs import *
 import prompt_element, image_element, description_element, configWindow, utils
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "1.2.3"
+VERSION = "1.2.4"
 
 class QDragDropScrollArea(QtWidgets.QScrollArea):
 
