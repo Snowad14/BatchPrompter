@@ -7,6 +7,12 @@ def sendErrorMessage(message : str):
     errorDialog.setWindowTitle("Error")
     errorDialog.exec_()
 
+def sendInfoMessage(message : str):
+    infoDialog = QtWidgets.QMessageBox()
+    infoDialog.setText(message)
+    infoDialog.setWindowTitle("Info")
+    infoDialog.exec_()
+
 def sendConfirmMessage(message : str):
     result = QMessageBox.question(
         None,

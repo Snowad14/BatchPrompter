@@ -47,6 +47,19 @@ class DescriptionElement(QtWidgets.QWidget):
         self.entry.selectionChanged.connect(lambda: self.entry.setSelection(0, 0))  # disable selection
         self.entry.clicked.connect(self.selectEntry)
 
+    @staticmethod
+    def getDescriptionWithText(txt, promptParent):
+        for i in promptParent.descriptions:
+            if i.entry.text() == txt:
+                return i
+
+    @staticmethod
+    def createDescriptionFromImport(parentPrompt, mainFrame, txt):
+        desc = DescriptionElement(parentPrompt, mainFrame=mainFrame)
+        desc.entry.setText(txt)
+        desc.entry.setReadOnly(True)
+        return desc
+
     def isUniqueElement(self):
         if [desc.entry.text() for desc in self.promptParent.descriptions].count(self.entry.text()) > 1:
             return False

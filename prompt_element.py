@@ -113,6 +113,15 @@ class PromptElement(QtWidgets.QWidget):
             if i.entry.text() == txt:
                 return i
 
+    @staticmethod
+    def createPromptFromImport(mainFrame, txt):
+        subjectPrompt = PromptElement(mainFrame=mainFrame)
+        subjectPrompt.entry.setText(txt)
+        subjectPrompt.entry.setReadOnly(True)
+        subjectPrompt.addButton.setEnabled(True)
+        subjectPrompt.deleteButton.setEnabled(True)
+        return subjectPrompt
+
     def collapsePrompt(self):
         collapseIcon = QtGui.QIcon()
         pixmap = QtGui.QPixmap("assets/triangle.svg")

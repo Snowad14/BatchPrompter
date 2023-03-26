@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from natsort import os_sorted
 import os, sys, glob, configparser
 
+import description_element
 import utils
 from flowlayout import FlowLayout
 import prompt_element, image_element
@@ -110,6 +111,9 @@ class ConfigDialog(QtWidgets.QDialog):
         self.exportPromptsButton.clicked.connect(self.exportPrompts)
         self.layout.addWidget(self.exportPromptsButton)
 
+        self.importPromptsButton = QtWidgets.QPushButton(self)
+        self.importPromptsButton.clicked.connect(self.importPrompts)
+        self.layout.addWidget(self.importPromptsButton)
 
         self.SubfolderCheckbox.setText("Include Subfolders")
         self.TxtCaptionCheckbox.setText("Txt Caption")
@@ -120,6 +124,7 @@ class ConfigDialog(QtWidgets.QDialog):
         self.subjectSeparatorLabel.setText("Subject :")
         self.descriptionSeparatorLabel.setText("Description :")
         self.exportPromptsButton.setText("Export Prompts")
+        self.importPromptsButton.setText("Import Prompts")
 
     def changeImageDimension(self):
         for imageWidget in image_element.ImageElement.allImages:
@@ -134,11 +139,22 @@ class ConfigDialog(QtWidgets.QDialog):
                     txt_file.write(prompt.entry.text() + "\n")
                     for description in prompt.getNonEmptyDescriptions():
                         txt_file.write("    " + description.entry.text() + "\n")
+        utils.sendInfoMessage("Exported Successfully")
 
-        finishDialog = QtWidgets.QMessageBox()
-        finishDialog.setText("Exported Successfully")
-        finishDialog.setWindowTitle("Finished")
-        finishDialog.exec_()
+    def importPrompts(self):
+        # make user context file menu to choose a txt file to save caption
+        txt_file_path = QtWidgets.QFileDialog.getOpenFileName(self, "Import Caption", "", "Text Files (*.txt)")[0]
+        with open(txt_file_path, "r", encoding="utf-8") as txt_file:
+            lastPrompt = None
+            for line in txt_file:
+                if line.startswith("    "):
+                    if lastPrompt:
+                        if not description_element.DescriptionElement.getDescriptionWithText(line.strip(), lastPrompt):
+                            description_element.DescriptionElement.createDescriptionFromImport(parentPrompt=lastPrompt, mainFrame=self.mainFrame,txt=line.strip())
+                else:
+                    if not prompt_element.PromptElement.getPromptWithText(line.strip()): # check if prompt already exists
+                        lastPrompt = prompt_element.PromptElement.createPromptFromImport(mainFrame=self.mainFrame, txt=line.strip())
+        utils.sendInfoMessage("Imported Successfully")
 
     def updateConfig(self):
         self.config["DEFAULT"]["Include_Subfolder"] = str(self.SubfolderCheckbox.isChecked())

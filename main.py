@@ -6,7 +6,7 @@ from platformdirs import *
 import prompt_element, image_element, description_element, configWindow, utils
 
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-VERSION = "1.2.4"
+VERSION = "1.2.5"
 
 class QDragDropScrollArea(QtWidgets.QScrollArea):
 
@@ -270,18 +270,12 @@ class Ui_MainWindow(QtWidgets.QWidget):
                 subjectPrompt = target_prompt
                 newdico[subjectPrompt] = target_prompt.descriptions
             else:
-                subjectPrompt = prompt_element.PromptElement(mainFrame=self)
-                subjectPrompt.entry.setText(subject)
-                subjectPrompt.entry.setReadOnly(True)
-                subjectPrompt.addButton.setEnabled(True)
-                subjectPrompt.deleteButton.setEnabled(True)
+                subjectPrompt = prompt_element.PromptElement.createPromptFromImport(mainFrame=self, txt=subject)
                 newdico[subjectPrompt] = []
 
             for desc in dico[subject]:
                 if desc not in [i.entry.text() for i in subjectPrompt.descriptions]:
-                    descPrompt = description_element.DescriptionElement(subjectPrompt, mainFrame=self)
-                    descPrompt.entry.setText(desc)
-                    descPrompt.entry.setReadOnly(True)
+                    descPrompt = description_element.DescriptionElement.createDescriptionFromImport(subjectPrompt, mainFrame=self, txt=desc)
                     newdico[subjectPrompt].append(descPrompt)
 
         for img in image_element.ImageElement.allImages:
