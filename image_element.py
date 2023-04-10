@@ -70,15 +70,18 @@ class ImageElement(QtWidgets.QWidget):
     def _dict2Caption(self):
         subjectList = []
         for i in self.usedDict.items():
-            a = [element.entry.text() for element in [i[0]] + i[1]] # Get all subject & desc in one list
-            subjectList.append(self.mainFrame.configMenu.descriptionSeparatorContent.text().join(a))
+            # Get all subject & desc in one list and remove duplicates (but should not be any)
+            descriptions = list(set([element.entry.text() for element in i[1]]))
+            FullElementInList = [i[0].entry.text()] + descriptions
+            subjectList.append(self.mainFrame.configMenu.descriptionSeparatorContent.text().join(FullElementInList))
         name = self.mainFrame.configMenu.subjectSeparatorContent.text().join(subjectList)
         return name
 
     def _getWritableCaption(self):
         subjectList = []
         for key, value in self.usedDict.items():
-            key, value = (key.entry.text(), [i.entry.text() for i in value])
+            descriptionUnique = list(set([element.entry.text() for element in value])) # Remove duplicates but should not be any
+            key, value = (key.entry.text(), descriptionUnique)
             if not value:
                 subjectList.append(key)
                 continue
