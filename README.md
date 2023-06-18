@@ -12,15 +12,3 @@
 
 🙏 Original idea/design of the program and many feedbacks by Juusoz#6120, many thanks to him
 
-## 📋 Installation
-  ...
-
-## 📝 TODO
-
-| Feature                                                | State |
-|:-------------------------------------------------------|:-----:|
-| Refactor to avoid static variables (Use MVC pattern) ? | 🛑 |
-| Refactor Prompt/DescritionElement using a base class   | 🛑 |
-| Import Prompts from .txt                               | 🟢  |
-| Multiple Context menu for export subject & others      | 🛑  |
-| Loading Images & prompts with a loading time           | 🟢  |
